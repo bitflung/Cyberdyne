@@ -117,6 +117,12 @@ void delay(uint32_t tick){
 	}
 }
 
+void get_img_buff_ptr(void **data, size_t *size)
+{
+	*data = (void*)input_0;
+	*size = sizeof(input_0);
+}
+
 
 /* **************************************************************************** */
 #ifdef ASCII_ART
@@ -421,6 +427,8 @@ int main(void) {
 		while (!(pb0 = PB_Get(0)));
 		if(pb0 == 1){
 			start_image_processing();
+			start_voice_recog();
+			MXC_SYS_ClockEnable(MXC_SYS_PERIPH_CLOCK_CNN);
 			break;
 //			start_voice_recog();
 //			MXC_SYS_ClockEnable(MXC_SYS_PERIPH_CLOCK_CNN);
@@ -526,9 +534,6 @@ static int start_image_processing() {
 			LED_On(LED2);
 
 		}
-
-			start_voice_recog();
-			MXC_SYS_ClockEnable(MXC_SYS_PERIPH_CLOCK_CNN);
 //		memset(buff, 32, TFT_BUFF_SIZE);
 //		TFT_Print(buff, TFT_X_START + 30, TFT_Y_START + IMAGE_SIZE_Y + 10,
 //				font_1, sprintf(buff, "%dms", cnn_image_time / 1000));

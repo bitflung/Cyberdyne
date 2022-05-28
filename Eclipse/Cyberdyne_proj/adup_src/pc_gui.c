@@ -15,7 +15,10 @@ extern void run_demo(int *image, int *voice, bool *shoot, bool *cheat);
 extern void camera_capture(uint8_t *buf, int *sz);
 extern void ascii_capture(uint8_t *buf, int *sz);
 
+#ifdef FAKE_CAMERA_DATA
 static uint8_t cam_data[128*128];
+#endif
+
 
 void adup_pc_handler(msg_t *msg){
 	switch(msg->cmd){
@@ -55,16 +58,22 @@ void run_handler(msg_t *msg){
 void cam_handler(msg_t *msg){
 	// handle a camera command
 	uint8_t tmp[9];
-
+	uint32_t *pCamData;
 
 	// REQ: there is no payload
 	printf("inside cam_handler\n");
 
 	// PROCESS:
+#ifdef FAKE_CAMERA_DATA
 	int sz;
 	camera_capture(cam_data, &sz);
+	pCamData = cam_data;
 	printf("captured fake cam data\n");
-
+#else
+	//Sending out the last image that was processed by CNN
+	size_t sz;
+	get_img_buff_ptr(&pCamData, &sz);
+#endif
 	// RES:
 	if(sz*2 > msg->bsize) {
 		printf("whoa boy, no room for this msg, making it barely fit");
@@ -74,7 +83,7 @@ void cam_handler(msg_t *msg){
 	}
 
 	sprintf(msg->buf, "");
-	uint32_t *alias = ((uint32_t *)(cam_data));
+	uint32_t *alias = pCamData;
 	for(int i=0; i<sz/4; i++){
 		// TODO: note that we assume sz is evenly divisible by 4!!
 		sprintf(tmp, "%08X", alias[i]);

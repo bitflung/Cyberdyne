@@ -126,6 +126,8 @@ class max78000_gui():
             
         ba = bytes.fromhex(ret.payload())
         print("converted 32k hex into [" + str(len(ba)) + "] bytes")
+		
+		#convert from -128+127 format to 0-255
         
         im = Image.frombuffer('L', (128,128), ba, 'raw', 'L', 0, 1)
         
