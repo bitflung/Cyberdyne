@@ -1,0 +1,13 @@
+#Python
+
+**/__pycache__
+**/.idea
+*.pyc
+
+
+*.o
+*.d
+*.orig
+
+Eclipse/Cyberdyne_proj/.settings
+Eclipse/Cyberdyne_proj/build
