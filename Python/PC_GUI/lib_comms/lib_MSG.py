@@ -2,7 +2,7 @@
 class MSG():
 
     def __init__(self, name):
-        self._bsize=1024*64 # max size of the payload, in bytes
+        self._bsize=1024*128 # max size of the payload, in bytes
         self._buf="" # array to hold the payload
         self._cmd = '\0' # char to hold command
         self._len = 0 # length of payload
@@ -16,7 +16,7 @@ class MSG():
         
     def setPayload(self, str):
         if self._bsize < len(str):
-            print("ERROR: submitted payload exceeds max size; ignoring")
+            print("ERROR: cur payload ["+str(self._len)+"] exceeds max size ["+str(self._bsize)+"]; ignoring")
         else:
             self._buf = str
             self._len = len(self._buf)

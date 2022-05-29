@@ -4,6 +4,7 @@ from tkinter import ttk
 from tkinter import scrolledtext
 import threading
 import numpy as np
+import PIL
 from PIL import ImageTk, Image
 
 from lib_comms.lib_ADUP import *
@@ -119,6 +120,7 @@ class max78000_gui():
         print("expecting "+str(numMsgs)+" messages of data...")
         
         ret = MSG("full_image")
+        ret.setCmd("C")
         step = 100/numMsgs
         progress = 0
         
@@ -126,7 +128,8 @@ class max78000_gui():
             msgi = self._adup.TSOP()
             ret.appendPayload(msgi.payload())
             progress=progress+step
-            print(str(progress)+"%")
+            print(str(progress)+"%: RX'd ["+str(msgi.len())+"] hex chars")
+            
            
         print("received all msgs")
         print(ret.toString())
@@ -139,15 +142,18 @@ class max78000_gui():
         
         print("we were supposed to get " + str(4*128*128)+ " bytes!")
         
+        # flush stdout
+        sys.stdout.flush()
+        
         rxdata = np.frombuffer(ba, dtype=np.int8)
 
         imgdata = np.delete(rxdata, np.arange(0, rxdata.size, 4))
         #change the two lines below where it has 128//4 to 128 when we fix the issue with sending all the data
         #imgdata = np.reshape(imgdata,(3,128,128))
-        imgdata = np.reshape(imgdata,(128//4,128,3))
+        imgdata = np.reshape(imgdata,(128,128,3))
         #imgdata=np.moveaxis(imgdata,0,2)
 
-        imgdata_unsigned = np.array((3,128,128//4),dtype = np.uint8)
+        imgdata_unsigned = np.array((3,128,128),dtype = np.uint8)
         imgdata_unsigned = imgdata + 128
 
         im=Image.fromarray(imgdata_unsigned.astype('uint8'),'RGB')
@@ -156,10 +162,12 @@ class max78000_gui():
         #im = Image.frombuffer('L', (128,128), ba, 'raw', 'L', 0, 1)
         
         ##### scale up by 2x #####
+        defaultScaling = 4
+        
         w,h=im.size
-        w=w*2
-        h=h*2
-        im=im.resize((w,h), resample=0)         
+        w=w*defaultScaling*1
+        h=h*defaultScaling*1
+        im=im.resize((w,h), resample=PIL.Image.BICUBIC) # resample==0 # PIL.Image.BICUBIC         
         ##########################
         
         # save to disk because that's cool

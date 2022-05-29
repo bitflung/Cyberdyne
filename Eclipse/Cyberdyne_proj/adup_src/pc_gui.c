@@ -74,14 +74,14 @@ void cam_handler(msg_t *msg){
 	msg->len = strlen(msg->buf);
 	adup->TX(msg);
 
-	uint32_t offset = sz/(numMsgs*4);
+	uint32_t offset = sz/(numMsgs); // numMsgs/4?
 	printf("sending [%d] (data)bytes in [%d] msgs, striding by [%d bytes] between msgs\n", sz, numMsgs, offset);
 
 	uint32_t *alias[numMsgs];
 
 	for(int i=0; i<numMsgs; i++){
 		// create a pointer to each 8KB segment of the data
-		alias[i]=(&cam_data[offset*i]);
+		alias[i]=(&cam_data[(offset*i)>>2]);
 	}
 
 	printf("about to send %d large msgs, please be patient\n", numMsgs);
@@ -89,6 +89,8 @@ void cam_handler(msg_t *msg){
 	for(int i=0; i<numMsgs; i++){
 		a=alias[i];
 		sprintf(msg->buf, "");
+		printf("next chunk at adr [0x%08X]\n", (uint32_t)(a));
+		printf("processing [offset=%d] bytes as 4-byte words\n", offset);
 		for(int j=0; j<offset/4; j++){
 			// TODO: note that we assume sz is evenly divisible by 4!!
 			sprintf(tmp, "%08X", a[j]);
@@ -96,7 +98,7 @@ void cam_handler(msg_t *msg){
 		}
 		msg->len = strlen(msg->buf);
 		adup->POST(msg);
-		printf("%d\n", i);
+		printf("%d: POSTed [%d] hex chars\n", i, msg->len);
 	}
 	printf("\nsent\n");
 	sprintf(msg->buf, "DONE");
