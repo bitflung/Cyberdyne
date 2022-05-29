@@ -1,5 +1,6 @@
 #include "pc_gui.h"
 #include <stdio.h>
+#include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
 //#include "mxc_device.h"
@@ -15,20 +16,105 @@ extern void run_demo(int *image, int *voice, bool *shoot, bool *cheat);
 extern void camera_capture(uint8_t **buf, uint32_t *sz);
 extern void ascii_capture(uint8_t *buf, int *sz);
 
+extern char *imageResults;//[40];
+extern char *voiceResults;
 
 //static uint8_t cam_data[128*128];
 
+void cmd_camera(msg_t *msg){
+	/* payload indicates subcmd:
+	 * 0: capture image
+	 * 1: classify existing image buffer
+	 * 2: transfer image buffer to pc
+	*/
+	switch(msg->buf[0]){
+	case('0'):
+		// capture image data
+		image_processing_phase1();
+		strcpy(msg->buf, "OK");
+		msg->len = strlen(msg->buf);
+		printf("captured camera image\n");
+		break;
+	case('1'):
+		// classify current image buffer
+		image_processing_phase2();
+		strcpy(msg->buf, "OK");
+		msg->len = strlen(msg->buf);
+		printf("classified image\n");
+		break;
+	case('2'):
+		// transfer image data to PC
+		cam_xfer_pc(msg);
+		sprintf(msg->buf, "OK");
+		msg->len = strlen(msg->buf);
+		printf("transferred image to GUI\n");
+		break;
+	default:
+		// invalid subcmd
+		adup->error("Invalid camera subcmd");
+		break;
+	}
+	//cam_handler(msg);
+}
+
+void cmd_voice(msg_t *msg){
+	// payload indicates how many attempts to allow while checking for keyword match
+	int numTries = strtol(msg->buf, NULL, 10);
+	start_voice_recog(numTries);
+	sprintf(msg->buf, voiceResults);
+	msg->len = strlen(msg->buf);
+}
+
+void cmd_results(msg_t *msg){
+	/*
+	 * subcmds
+	 * 0: % human img
+	 * 1: % human voice
+	 * 2: decision (kill/mokill)
+	 * 3: ascii art
+	 * 4: cheated?
+	 */
+	switch(msg->buf[0]){
+	case('0'):
+		sprintf(msg->buf, imageResults);
+		msg->len = strlen(msg->buf);
+		break;
+	case('1'):
+		sprintf(msg->buf, voiceResults);
+		msg->len = strlen(msg->buf);
+		break;
+	default:
+		adup->error("unsupported results subcmd");
+		break;
+	}
+}
+
+void cmd_transfer(msg_t *msg){
+	// we receive an image from the PC and store it in the image buffer
+	// it can be classified later...
+	// it MIGHT be a patched image
+}
 void adup_pc_handler(msg_t *msg){
+	printf("called adup_pc_handler\n");
 	switch(msg->cmd){
+//	case('R'):
+//		run_handler(msg);
+//		break;
 	case('R'):
-		run_handler(msg);
+		cmd_results(msg);
 		break;
 	case('C'):
-		cam_handler(msg);
+		cmd_camera(msg);
 		break;
-	case('A'):
-		ascii_handler(msg);
+	case('V'):
+		cmd_voice(msg);
 		break;
+	case('T'):
+		cmd_transfer(msg);
+		break;
+//	case('A'):
+//		ascii_handler(msg);
+//		break;
 	default:
 		adup->error("Unsupported command prefix");
 		break;
@@ -53,7 +139,7 @@ void run_handler(msg_t *msg){
 	msg->len = strlen(msg->buf);
 }
 
-void cam_handler(msg_t *msg){
+void cam_xfer_pc(msg_t *msg){
 	// handle a camera command
 	uint8_t tmp[9];
 	uint32_t *cam_data;
@@ -63,7 +149,8 @@ void cam_handler(msg_t *msg){
 	printf("inside cam_handler\n");
 
 	// PROCESS:
-	camera_capture(&cam_data, &sz);
+	cam_data = getCamData(); //input_0; //[IMAGE_SIZE_X * IMAGE_SIZE_Y] // uint32_t[128*128] == 64KB
+	sz=128*128*4;
 	printf("captured real cam data\n");
 
 	// RES:
@@ -102,8 +189,6 @@ void cam_handler(msg_t *msg){
 		printf("%d: POSTed [%d] hex chars\n", i, msg->len);
 	}
 	printf("\nsent\n");
-	sprintf(msg->buf, "DONE");
-	msg->len = 4;
 }
 
 void ascii_handler(msg_t *msg){

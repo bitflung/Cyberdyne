@@ -21,21 +21,39 @@ class max78000_gui():
         self.hbg_w=2
         self.f_padx=5
         self.f_pady=5
+        self.buttons = []
         
         self.win = tk.Tk()
         self.win.title(name)
         self.setup()
-        self.RMSG = MSG("run")
-        self.CMSG = MSG("cam")
-        self.AMSG = MSG("art")
+        self.RMSG = MSG("results")
+        self.CMSG = MSG("camera")
+        self.VMSG = MSG("voice")
+        self.TMSG = MSG("transfer")
         
         self.RMSG.setCmd('R')
         self.CMSG.setCmd('C')
-        self.AMSG.setCmd('A')
+        self.VMSG.setCmd('V')
+        self.TMSG.setCmd('T')
+        
+        self.RMSG.setPayload("")
+        self.CMSG.setPayload("")
+        self.VMSG.setPayload("")
+        self.TMSG.setPayload("")
+        
+        
         
         self.adup = None
         #self.run()
 
+    def disableAll(self):
+        for b in self.buttons:            
+            b.configure(state='disable')
+            
+    def enableAll(self):
+        for b in self.buttons:            
+            b.configure(state='active')
+        
     def setAdup(self, adup):    
         print("setting up ADUP callback")
         self._adup=adup
@@ -74,8 +92,84 @@ class max78000_gui():
    
         self.imgLbl = tk.Label(frm, image=img1, borderwidth=1, relief="solid")
         self.imgLbl.pack()
+                
+    def makefrmBotL(self, frm):
+        lbl = tk.Label(
+            master=frm,
+            borderwidth = 3,
+            relief="groove",
+            text="Native",
+            width=40,
+            bg="blue",
+            fg="white",
+            anchor="w",
+            )
+        lbl.pack(expand=True, fill='both')
         
-    def makefrmTopR(self, frm):
+        im = PIL.Image.open("default.png")
+        img1=ImageTk.PhotoImage(im)        
+   
+        self.imgLblNative = tk.Label(frm, image=img1, borderwidth=1, relief="solid")
+        #self.imgLbl.grid(column=0, row=1)
+        self.imgLblNative.pack()
+        btn = tk.Button(
+            master=frm,
+            text = "Upload",
+            fg = "black",
+            bg = "grey",
+            width = 20,
+            height = 3*2,
+            command = self.btnUploadNative,
+            )
+        btn.pack(expand=True, fill='both')
+        self.buttons.append(btn)
+        
+    def makefrmBotM(self, frm):
+        lbl = tk.Label(
+            master=frm,
+            borderwidth = 3,
+            relief="groove",
+            text="Patched",
+            width=40,
+            bg="blue",
+            fg="white",
+            anchor="w",
+            )
+        lbl.pack(expand=True, fill='both')
+        
+        im = PIL.Image.open("patched.png")
+        img1=ImageTk.PhotoImage(im)        
+   
+        self.imgLblPatched = tk.Label(frm, image=img1, borderwidth=1, relief="solid")
+        #self.imgLbl.grid(column=0, row=1)
+        self.imgLblPatched.pack()
+        
+        btn = tk.Button(
+            master=frm,
+            text = "Upload",
+            fg = "black",
+            bg = "grey",
+            width = 20,
+            height = 3*2,
+            command = self.btnUploadPatched,
+            )
+        btn.pack(expand=True, fill='both')
+        self.buttons.append(btn)
+        
+    def makefrmR(self, frm):
+        lbl = tk.Label(
+            master=frm,
+            borderwidth = 3,
+            height=4,
+#             relief="groove",
+#             text="Adversarial Patching",
+#             width=40,
+#             bg="blue",
+#             fg="white",
+#             anchor="w",
+        )
+        lbl.pack(expand=True, fill='both')
+        
         lbl = tk.Label(
             master=frm,
             borderwidth = 3,
@@ -88,6 +182,31 @@ class max78000_gui():
             )        
         lbl.pack()
         
+        lbl = tk.Label(
+            master=frm,
+            borderwidth = 3,
+            relief="groove",
+            text="Results",
+            width=40,
+            #bg="blue",
+            #fg="white",
+            anchor="w",
+            )        
+        lbl.pack()
+        
+        lbl = tk.Label(
+            master=frm,
+            borderwidth = 3,
+            relief="groove",
+            text="[result text here]",
+            width=40,
+            #bg="blue",
+            #fg="white",
+            anchor="w",
+            )        
+        lbl.pack()
+        self.lblResults = lbl
+        
         btn = tk.Button(
             master=frm,
             text = "Execute Demo",
@@ -95,10 +214,11 @@ class max78000_gui():
             bg = "grey",
             width = 20,
             height = 3,
-            command = self.btnRunExec,
+            command = self.btnExecute,
             )
         #btnRun.grid(column=0, row=2)#, columnspan=1)
         btn.pack(expand=True, fill='both')
+        self.buttons.append(btn)
         
         ####################
         lbl = tk.Label(
@@ -175,10 +295,11 @@ class max78000_gui():
             bg = "grey",
             width = 20,
             height = 3,
-            command = self.btnRunExec,
+            command = self.btnCapture,
             )
         #btnRun.grid(column=0, row=2)#, columnspan=1)
         btn.pack(expand=True, fill='both')
+        self.buttons.append(btn)
         
         btn = tk.Button(
             master=frm,
@@ -187,10 +308,11 @@ class max78000_gui():
             bg = "grey",
             width = 20,
             height = 3,
-            command = self.btnRunExec,
+            command = self.btnClassify,
             )
         #btnRun.grid(column=0, row=2)#, columnspan=1)
         btn.pack(expand=True, fill='both')
+        self.buttons.append(btn)
         
         btn = tk.Button(
             master=frm,
@@ -199,9 +321,10 @@ class max78000_gui():
             bg = "grey",
             width = 20,
             height = 3,
-            command = self.btnCamExec,
+            command = self.btnTransfer,
             )
         btn.pack(expand=True, fill='both')
+        self.buttons.append(btn)
         
         ##############################
         
@@ -276,71 +399,11 @@ class max78000_gui():
             bg = "grey",
             width = 20,
             height = 3,
-            command = self.btnCamExec,
+            command = self.btnVoiceDemo,
             )
         btn.pack(expand=True, fill='both')
+        self.buttons.append(btn)
         
-    def makefrmBotL(self, frm):
-        lbl = tk.Label(
-            master=frm,
-            borderwidth = 3,
-            relief="groove",
-            text="Native",
-            width=40,
-            bg="blue",
-            fg="white",
-            anchor="w",
-            )
-        lbl.pack(expand=True, fill='both')
-        
-        im = PIL.Image.open("default.png")
-        img1=ImageTk.PhotoImage(im)        
-   
-        self.imgLblNative = tk.Label(frm, image=img1, borderwidth=1, relief="solid")
-        #self.imgLbl.grid(column=0, row=1)
-        self.imgLblNative.pack()
-        btn = tk.Button(
-            master=frm,
-            text = "Upload",
-            fg = "black",
-            bg = "grey",
-            width = 20,
-            height = 3*2,
-            command = self.btnCamExec,
-            )
-        btn.pack(expand=True, fill='both')
-        
-    def makefrmBotM(self, frm):
-        lbl = tk.Label(
-            master=frm,
-            borderwidth = 3,
-            relief="groove",
-            text="Patched",
-            width=40,
-            bg="blue",
-            fg="white",
-            anchor="w",
-            )
-        lbl.pack(expand=True, fill='both')
-        
-        im = PIL.Image.open("patched.png")
-        img1=ImageTk.PhotoImage(im)        
-   
-        self.imgLblPatched = tk.Label(frm, image=img1, borderwidth=1, relief="solid")
-        #self.imgLbl.grid(column=0, row=1)
-        self.imgLblPatched.pack()
-        
-        btn = tk.Button(
-            master=frm,
-            text = "Upload",
-            fg = "black",
-            bg = "grey",
-            width = 20,
-            height = 3*2,
-            command = self.btnCamExec,
-            )
-        btn.pack(expand=True, fill='both')
-    def makefrmBotR(self, frm):
         lbl = tk.Label(
             master=frm,
             borderwidth = 3,
@@ -360,9 +423,10 @@ class max78000_gui():
             bg = "grey",
             width = 40,
             height = 3,
-            command = self.btnCamExec,
+            command = self.btnApplyPatch,
             )
         btn.pack(expand=True)#, fill='both')
+        self.buttons.append(btn)
         
         btn = tk.Button(
             master=frm,
@@ -371,9 +435,10 @@ class max78000_gui():
             bg = "grey",
             width = 40,
             height = 3,
-            command = self.btnCamExec,
+            command = self.btnLoadPatch,
             )
         btn.pack(expand=True)#, fill='both')
+        self.buttons.append(btn)
         
         lbl = tk.Label(
             master=frm,
@@ -399,11 +464,43 @@ class max78000_gui():
         
         self.makefrmBotL(botL)
         self.makefrmBotM(botM)
-        self.makefrmBotR(botR)
+        #self.makefrmBotR(botR)
         
-            
     
     def makeUI(self):
+        #self.win.geometry("320x200")
+        
+        frmRoot = tk.Frame(master=self.win)
+        self.frmRoot = frmRoot
+        
+        frmRoot.pack()
+        
+        frmL = tk.Frame(master=frmRoot)
+        frmR = tk.Frame(master=frmRoot)        
+        frmL.pack(side=tk.LEFT)
+        frmR.pack(side=tk.RIGHT)
+        
+#         frmTop = tk.Frame(master=frmRoot)
+#         frmBot = tk.Frame(master=frmRoot)
+#         frmTop.pack(side=tk.TOP)
+#         frmBot.pack(side=tk.BOTTOM)
+        
+        frmTL = tk.Frame(master=frmL)
+        frmBL = tk.Frame(master=frmL)
+        frmTL.pack(side=tk.TOP)
+        frmBL.pack(side=tk.BOTTOM)
+        
+        frmBot = tk.Frame(master=frmBL)
+        frmBot.pack()
+        
+        self.makefrmTopL(frmTL)        
+        self.makefrmBot(frmBot)
+        self.makefrmR(frmR)
+        
+        #self.makefrmBotL(frmBL)
+#         self.makefrmBotR(frmBR)
+    
+    def oldmakeUI(self):
         #self.win.geometry("320x200")
         
         frmRoot = tk.Frame(master=self.win)
@@ -430,11 +527,186 @@ class max78000_gui():
         #self.makefrmBotL(frmBL)
 #         self.makefrmBotR(frmBR)
     
-    def btnRunExec(self):
+    def adupTransact(self, msg, name, exp):
+        self._adup.TX(self.CMSG)
+        ret = self._adup.RX()
+        if(ret.payload() == exp):
+            print(name+": transaction success")
+        else:
+            print(name+": transaction fail -> "+ret.toString(ret.payload()))
+        return ret
+            
+    def btnExecute(self):
+        # perform IMAGE then VOICE commands, all in a row
+        pass
+        
+    def btnCapture(self):
+        self.disableAll()
+        threading.Thread(target=self.thrd_btnCapture).start()
+        
+    def thrd_btnCapture(self):        
+        self.img_prompt.configure(text="...working...")
+        self.img_prompt.text="...working..."
+        self.CMSG.setPayload("0") # capture ues camera subcmd 0
+        self.adupTransact(self.CMSG, "capture", "OK")
+        self.img_prompt.configure(text="Captured!")
+        self.img_prompt.text="Captured!"
+        self.enableAll()
+        
+    
+    def btnClassify(self):
+        self.disableAll()
+        threading.Thread(target=self.thrd_btnClassify).start()
+    
+    def thrd_btnClassify(self):
+        self.CMSG.setPayload("1") # subcmd for classify
+        self._adup.TX(self.CMSG)
+        ret = self._adup.RX()
+        
+        self.RMSG.setPayload("0")
         self._adup.TX(self.RMSG)
         ret = self._adup.RX()
-        print(ret.toString())    
-        print("ran!")
+        print(ret.toString(ret.payload()))
+        self.img_result.configure(text=ret.payload()+"%")
+        self.img_result.text=ret.payload()+"%"
+        self.enableAll()
+        
+    def btnTransfer(self):
+        self.disableAll()
+        threading.Thread(target=self.thrd_btnTransfer).start()
+        
+    def thrd_btnTransfer(self):
+        self.CMSG.setPayload("2") # subcmd for xfering image to PC is 3
+        self._adup.TX(self.CMSG)
+                
+        msg_numMsgs=self._adup.RX() # receive a msg indicating how many data msgs to accept
+        numMsgs = int(msg_numMsgs.payload(), 16)
+        print(msg_numMsgs.payload())
+        print("expecting "+str(numMsgs)+" messages of data...")
+        
+        ret = MSG("full_image")
+        ret.setCmd("C")
+        step = 100/numMsgs
+        progress = 0
+        
+        for i in range(numMsgs):
+            msgi = self._adup.TSOP()
+            ret.appendPayload(msgi.payload())
+            progress=progress+step
+            print(str(progress)+"%: RX'd ["+str(msgi.len())+"] hex chars")
+            
+           
+        print("received all msgs")
+        print(ret.toString())
+        
+        dne = self._adup.RX() # capture a final DONE message        
+        print("RX'd camera data; converting to image")
+        
+        ba = bytes.fromhex(ret.payload())
+<<<<<<< Updated upstream
+        print("converted 32k hex into [" + str(len(ba)) + "] bytes")
+        
+=======
+        print("converted 32k hex into [" + str(len(ba)) + "] bytes")        
+>>>>>>> Stashed changes
+        #print("we were supposed to get " + str(4*128*128)+ " bytes!")
+        
+        # flush stdout
+        sys.stdout.flush()
+        
+        rxdata = np.frombuffer(ba, dtype=np.int8)
+
+        imgdata = np.delete(rxdata, np.arange(0, rxdata.size, 4))
+        #change the two lines below where it has 128//4 to 128 when we fix the issue with sending all the data
+        #imgdata = np.reshape(imgdata,(3,128,128))
+        imgdata = np.reshape(imgdata,(128,128,3))
+        #imgdata=np.moveaxis(imgdata,0,2)
+
+        imgdata_unsigned = np.array((3,128,128),dtype = np.uint8)
+        imgdata_unsigned = imgdata + 128
+<<<<<<< Updated upstream
+
+=======
+        
+>>>>>>> Stashed changes
+        #swap red and blue so they are in the correct order
+        imgdata_tmp= np.copy(imgdata_unsigned)
+        imgdata_unsigned[:,:,0] = imgdata_unsigned[:,:,2]
+        imgdata_unsigned[:,:,2] = imgdata_tmp[:,:,0]
+<<<<<<< Updated upstream
+
+=======
+        
+>>>>>>> Stashed changes
+        im=Image.fromarray(imgdata_unsigned.astype('uint8'),'RGB')
+        
+        im = self.imageFormat(im, True)
+        self.updateGuiImage(im)
+   
+        print("cam'd!")
+        self.enableAll()
+        
+    def btnVoiceDemo(self):
+        self.disableAll()
+        threading.Thread(target=self.thrd_btnVoiceDemo).start()
+        
+    def thrd_btnVoiceDemo(self):
+        # perform full voice demo
+        self.vce_prompt.configure(text="... listening ...")
+        self.vce_prompt.text="... listening ..."
+        
+        self.VMSG.setPayload("1")
+        self._adup.TX(self.VMSG)
+        ret = self._adup.RX()
+        print(ret.toString(ret.payload()))        
+        self.vce_prompt.configure(text="Done!")
+        self.vce_prompt.text="Done!"
+        
+        self.RMSG.setPayload("1")
+        self._adup.TX(self.RMSG)
+        ret = self._adup.RX()
+        print(ret.toString(ret.payload()))
+        self.vce_result.configure(text=ret.payload())
+        self.vce_result.text=ret.payload()
+        
+        self.enableAll()
+    
+        
+    def btnUploadNative(self):
+        self.disableAll()
+        threading.Thread(target=self.thrd_btnUploadNative).start()
+        # upload the locally stored native image to the board
+        pass
+    
+    def thrd_btnUploadNative(self):
+        self.enableAll()
+        
+    def btnUploadPatched(self):
+        self.disableAll()
+        threading.Thread(target=self.thrd_btnUploadPatched).start()
+        # upload patched image to the board
+        pass
+    
+    def thrd_btnUploadPatched(self):
+        self.enableAll()
+        
+    def btnApplyPatch(self):
+        self.disableAll()
+        threading.Thread(target=self.thrd_btnApplyPatch).start()
+        # apply an adversarial patch to the native image, creating and updating the patched image
+        pass
+    
+    def thrd_btnApplyPatch(self):
+        self.enableAll()
+        
+    def btnLoadPatch(self):
+        self.disableAll()
+        threading.Thread(target=self.thrd_btnApplyPatch).start()
+        # load a patch file from disk to be applied later to captured images
+        pass
+    
+    def thrd_btnLoadPatch(self):
+        self.enableAll()
         
     def imageFormat(self, im, save):
         if(save):
@@ -474,63 +746,7 @@ class max78000_gui():
         self.imgLblPatched.image=img3
         
         
-    def btnCamExec(self):
-        self._adup.TX(self.CMSG)
-        print("TX done")
-        
-        msg_numMsgs=self._adup.RX() # receive a msg indicating how many data msgs to accept
-        numMsgs = int(msg_numMsgs.payload(), 16)
-        print(msg_numMsgs.payload())
-        print("expecting "+str(numMsgs)+" messages of data...")
-        
-        ret = MSG("full_image")
-        ret.setCmd("C")
-        step = 100/numMsgs
-        progress = 0
-        
-        for i in range(numMsgs):
-            msgi = self._adup.TSOP()
-            ret.appendPayload(msgi.payload())
-            progress=progress+step
-            print(str(progress)+"%: RX'd ["+str(msgi.len())+"] hex chars")
-            
-           
-        print("received all msgs")
-        print(ret.toString())
-        
-        dne = self._adup.RX() # capture a final DONE message        
-        print("RX'd camera data; converting to image")
-        
-        ba = bytes.fromhex(ret.payload())
-        print("converted 32k hex into [" + str(len(ba)) + "] bytes")
-        
-        #print("we were supposed to get " + str(4*128*128)+ " bytes!")
-        
-        # flush stdout
-        sys.stdout.flush()
-        
-        rxdata = np.frombuffer(ba, dtype=np.int8)
-
-        imgdata = np.delete(rxdata, np.arange(0, rxdata.size, 4))
-        #change the two lines below where it has 128//4 to 128 when we fix the issue with sending all the data
-        #imgdata = np.reshape(imgdata,(3,128,128))
-        imgdata = np.reshape(imgdata,(128,128,3))
-        #imgdata=np.moveaxis(imgdata,0,2)
-
-        imgdata_unsigned = np.array((3,128,128),dtype = np.uint8)
-        imgdata_unsigned = imgdata + 128
-
-        #swap red and blue so they are in the correct order
-        imgdata_tmp= np.copy(imgdata_unsigned)
-        imgdata_unsigned[:,:,0] = imgdata_unsigned[:,:,2]
-        imgdata_unsigned[:,:,2] = imgdata_tmp[:,:,0]
-
-        im=Image.fromarray(imgdata_unsigned.astype('uint8'),'RGB')
-        
-        im = self.imageFormat(im, True)
-        self.updateGuiImage(im)
-   
-        print("cam'd!")
+    
         
     
     def termOutputUpdate(self, txt):

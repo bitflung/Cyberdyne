@@ -49,44 +49,44 @@ extern bool btn0_capture_image;
 extern bool btn0_pressed_ai;
 bool adup_init_done=false;
 
-void run_demo(int *image, int *voice, bool *shoot, bool *cheat){
-	printf("running the demo...\n");
-	btn0_capture_image=true;
+//void run_demo(int *image, int *voice, bool *shoot, bool *cheat){
+//	printf("running the demo...\n");
+//	btn0_capture_image=true;
+//
+//	//image_processing_phase1();
+//	//image_processing_phase2();
+//	*image = 45; // 45% confident you are human based on image
+//	*voice = 78; // 78% conf you are human based on voice
+//	*shoot = true; // firmware decided to shoot you
+//	*cheat = false; // you used the konami code to survive anyway!!
+//
+//	printf("\tran run_demo()\n");
+//	return;
+//}
 
-	//image_processing_phase1();
-	//image_processing_phase2();
-	*image = 45; // 45% confident you are human based on image
-	*voice = 78; // 78% conf you are human based on voice
-	*shoot = true; // firmware decided to shoot you
-	*cheat = false; // you used the konami code to survive anyway!!
+//void camera_capture(uint32_t **buf, uint32_t *sz){
+//	uint32_t * dat = getCamData(); //input_0; //[IMAGE_SIZE_X * IMAGE_SIZE_Y] // uint32_t[128*128] == 64KB
+//	*sz=128*128*4;
+//
+//	*buf = dat;
+//
+//	printf("shared most recent cam_capture result\n");
+//	return;
+//}
 
-	printf("\tran run_demo()\n");
-	return;
-}
-
-void camera_capture(uint32_t **buf, uint32_t *sz){
-	uint32_t * dat = getCamData(); //input_0; //[IMAGE_SIZE_X * IMAGE_SIZE_Y] // uint32_t[128*128] == 64KB
-	*sz=128*128*4;
-
-	*buf = dat;
-
-	printf("shared most recent cam_capture result\n");
-	return;
-}
-
-void ascii_capture(uint8_t *buf, int *sz){
-	int size=16*16;
-
-	// shovel ascii art data into the buffer
-	for(int i=0; i<size; i++){
-		buf[i]=(0xFF & i);
-	}
-
-	*sz = size;
-
-	printf("ran ascii_capture()\n");
-	return;
-}
+//void ascii_capture(uint8_t *buf, int *sz){
+//	int size=16*16;
+//
+//	// shovel ascii art data into the buffer
+//	for(int i=0; i<size; i++){
+//		buf[i]=(0xFF & i);
+//	}
+//
+//	*sz = size;
+//
+//	printf("ran ascii_capture()\n");
+//	return;
+//}
 
 void adup_app_handler(msg_t *msg){
 	adup_pc_handler(msg);

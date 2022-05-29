@@ -37,13 +37,14 @@ class MSG():
     def len(self):
         return self._len
     
-    def toString(self):
+    def toString(self, append=""):
         ret = ""
         ret = ret + "LABEL[" + self._name + "]\t"
         ret = ret + "CMD [" + self.cmd() + "]\t"
         #ret = ret + "BUF [" + self.payload() + "]"
         ret = ret + "LEN [" + str(self.len()) + "]\t"
         # ret = ret + self.payload()
+        ret += "["+append+"]"
         
         return ret
 

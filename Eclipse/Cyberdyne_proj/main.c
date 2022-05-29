@@ -49,12 +49,24 @@ bool btn0_pressed_ai;
 bool btn0_capture_image;
 bool btn1_pressed_adup; // sticky once set to true; eventually we can fire a command from the PC to disconnect?
 
+#define ADUP_ON_BY_DEFAULT true
+
+uint32_t resultsSize = 40;
+char *imageResults;//[40];
+char *voiceResults;//[40];
+char *decisionResults;//[40];
+bool cheatCode=false;
 
 // -------------------
 void cb_PB_0(void *v){
 	printf("RX'd PB0 event\n");
-	btn0_capture_image=true;
-	btn0_pressed_ai=true;
+	if(btn1_pressed_adup){
+		printf("demo controlled via GUI now\n");
+	}
+	else{
+		btn0_capture_image=true;
+		btn0_pressed_ai=true;
+	}
 }
 
 void cb_PB_1(void *v){
@@ -63,8 +75,18 @@ void cb_PB_1(void *v){
 }
 
 void local_setup(void){
+	resultsSize = 40;
+	imageResults = malloc(sizeof(char)*resultsSize);//[40];
+	voiceResults = malloc(sizeof(char)*resultsSize);//[40];
+	decisionResults = malloc(sizeof(char)*resultsSize);//[40];
+
+	snprintf(imageResults, 40, "Not yet tested");
+	snprintf(voiceResults, 40, "Not yet tested");
+	snprintf(decisionResults, 40, "Not yet tested");
+	cheatCode=false;
+
 	btn0_pressed_ai=false;
-	//btn1_pressed_adup=false;
+	btn1_pressed_adup=ADUP_ON_BY_DEFAULT;
 
 	PB_Init();
 	PB_RegisterCallback(0, cb_PB_0);
@@ -72,6 +94,7 @@ void local_setup(void){
 }
 
 void setup(void){
+	// Console_Shutdown(); // kill the console UART; printf() wont print anywhere
 	local_setup();
 	//main_adup_setup(); // called by main_adup_loop after pressing pb1
 	ai_setup();

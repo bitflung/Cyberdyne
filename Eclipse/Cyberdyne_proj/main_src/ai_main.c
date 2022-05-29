@@ -55,13 +55,16 @@ int font_2 = (int)& SansSerif16x16[0];
 
 const char classes[CNN_NUM_IMAGE_OUTPUTS][10] = { "HUMAN", "ROBOT" };
 
+extern char *imageResults;//[40];
+extern char *voiceResults;//[40];
+extern char *decisionResults;//[40];
 
 IMAGE_t iClassifier;
 
 // Classification layer:
 static int32_t ml_image_data[CNN_NUM_IMAGE_OUTPUTS];
 static q15_t ml_image_softmax[CNN_NUM_IMAGE_OUTPUTS];
-extern int start_voice_recog(void);
+extern int start_voice_recog(int);
 volatile uint32_t cnn_image_time; // Stopwatch
 
 // RGB565 buffer for TFT
@@ -401,7 +404,7 @@ void ai_loop(void){
 //		int pb0 = 0;
 		printf("********** The Game Begins Now, press PB1 to start  **********\r\n");
 		start_image_processing();
-		start_voice_recog();
+		start_voice_recog(10);
 		MXC_SYS_ClockEnable(MXC_SYS_PERIPH_CLOCK_CNN);
 	#ifdef TFT_ENABLE
 		MXC_TFT_ClearScreen();
@@ -450,12 +453,7 @@ int image_processing_phase2() {
 
 	int result[CNN_NUM_IMAGE_OUTPUTS]; // = {0};
 
-
 	//	char buff[TFT_BUFF_SIZE];
-
-
-
-
 
 	cnn_valid_state_image();
 	cnn_image_start();
@@ -478,7 +476,8 @@ int image_processing_phase2() {
 	asciiart((uint8_t*) input_0);
 #endif
 	printf("Your face says you are:\n");
-
+	int pdigs=0;
+	int sel;
 	for (i = 0; i < CNN_NUM_IMAGE_OUTPUTS; i++) {
 		digs = (1000 * ml_image_softmax[i] + 0x4000) >> 15;
 		tens = digs % 10;
@@ -488,8 +487,15 @@ int image_processing_phase2() {
 		//					classes[i], result[i], tens);
 		iClassifier.humans = digs ? i == 0 : 0;
 		iClassifier.robots = digs ? i == 1 : 0;
+		if(digs>pdigs){
+			pdigs=digs;
+			sel=i;
+		}
+
 		printf("%8s: %d.%d%%\r\n",	classes[i], result[i], tens);
 	}
+	//char tmp[100];
+	sprintf(imageResults, "%8s: %d%%",	classes[sel], result[sel]);
 
 	printf("\nLet's see if you sound like a ROBOT\n");
 

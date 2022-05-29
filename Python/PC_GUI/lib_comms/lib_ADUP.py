@@ -36,7 +36,10 @@ class ADUP():
         self.PROT_MAX_PAYLOAD = self.DEFAULT_MAX_PROT_PAYLOAD
         self.listenPending = False
         self._cb = None
+        self._debugCB = None
         
+    def regDebugCB(self, debugCB):
+        self._debugCB = debugCB
         
     def name(self):
         return self._name
@@ -286,21 +289,28 @@ class ADUP():
                 print("RX'd error header from MCU!");
                 self.serQuit(1);
 
-            if (getCmd != expcmd):
-                print("ERROR in RxProtHandler: unexpected response header");
-                self.serQuit(1);
-
-            if (getLen > self.PROT_MAX_PAYLOAD):
-                ret = str(self.serRead(self.PROT_MAX_PAYLOAD));
+            if (getCmd == "D"):
+                debugStr = str(self.serRead(getLen));
+                if(self._debugCB):
+                    self._debugCB(debugStr)
+                else:
+                    print("DEBUG MSG: "+debugStr)
             else:
-                if getLen > 0:
-                    ret = str(self.serRead(getLen));
+                if (getCmd != expcmd):
+                    print("ERROR in RxProtHandler: unexpected response header");
+                    self.serQuit(1);
 
-            if(doAcks):
-                #print("sending packet ACK")
-                self.putHeader(getCmd, 0);
-                
-            retaccum = retaccum + ret;  # accumulate the total return string to pass within python
+                if (getLen > self.PROT_MAX_PAYLOAD):
+                    ret = str(self.serRead(self.PROT_MAX_PAYLOAD));
+                else:
+                    if getLen > 0:
+                        ret = str(self.serRead(getLen));
+
+                if(doAcks):
+                    #print("sending packet ACK")
+                    self.putHeader(getCmd, 0);
+                    
+                retaccum = retaccum + ret;  # accumulate the total return string to pass within python
 
         return expcmd, retaccum;
 

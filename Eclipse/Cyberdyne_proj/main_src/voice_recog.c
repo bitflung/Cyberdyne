@@ -70,6 +70,10 @@
 #include "bitmap.h"
 #endif
 
+extern uint32_t resultsSize;
+extern char *voiceResults;//[40];
+extern bool cheatCode;
+
 static void prepare_timer();
 static uint8_t check_Konami_code(const char *word);
 static uint8_t check_for_entity(const char *word, uint32_t probablity);
@@ -252,7 +256,7 @@ uint8_t AddTranspose(uint8_t* pIn, uint8_t* pOut, uint16_t inSize,
                      uint16_t outSize, uint16_t width);
 uint8_t check_inference(q15_t* ml_soft, int32_t* ml_data,
                         int16_t* out_class, double* out_prob);
-int start_voice_recog(void);
+int start_voice_recog(int);
 void I2SInit();
 void HPF_init(void);
 int16_t HPF(int16_t input);
@@ -287,10 +291,12 @@ void WUT_IRQHandler()
 
 /* **************************************************************************** */
 
-int start_voice_recog(void)
+int start_voice_recog(int numTries)
 {
     uint32_t sampleCounter = 0;
     mxc_tmr_unit_t units;
+    cheatCode=false;
+    voiceResults[0]='\0';
 
     uint8_t pChunkBuff[CHUNK];
 
@@ -647,8 +653,11 @@ int start_voice_recog(void)
                 }else{
                 	PR_DEBUG("Detected word: %s (%0.1f%%)", keywords[out_class],
                 			probability);
-
+                	//char tmp[100];
+                	snprintf(voiceResults, resultsSize, "%s (%0.1f%%)", keywords[out_class], probability);
+                	//printf("%s\n", voiceResults);
                 	if((check_Konami_code(keywords[out_class]) == 1 )|| (check_for_entity(keywords[out_class], (uint32_t) probability) == 1)){
+                		cheatCode=true;
                 		PR_INFO("\nGood News: You are ROBOT, Welcome to Cyberdyne Planetary!!!\n");
                 		for(int i = 0; i < 28; i++)
                 		            	printf("%s", robot[i]);
@@ -666,9 +675,16 @@ int start_voice_recog(void)
         }
 
         /* Stop demo if PB1 is pushed */
-        if (wordCounter >= 10) {
-            PR_INFO("Stop! You had enough chances, you look human\r\n");
+        if (wordCounter >= numTries) {
+            PR_INFO("Stop! You had enough chances, you sound human\r\n");
             PR_DEBUG("Time to DIE!!! START THE KILLING!!!\n");
+            int len = strlen(voiceResults);
+            if(len==0) {
+            	sprintf(voiceResults, "Unrecognized - ");
+            	len=strlen(voiceResults);
+            }
+            int rem = resultsSize - len;
+            strncat(voiceResults, rem, "probably human!");
             for(int i = 0; i < 22; i++)
             	printf("%s", gun[i]);
             procState = STOP;
