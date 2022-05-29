@@ -93,7 +93,30 @@ void cmd_transfer(msg_t *msg){
 	// we receive an image from the PC and store it in the image buffer
 	// it can be classified later...
 	// it MIGHT be a patched image
+
+	// get the number of msgs pending from initial msg payload
+	int numMsgs=0;
+	numMsgs = strtol(msg->buf, NULL, 16);
+
+	// NOTE: we assume msgs are sent as an integer number of words (32-bit, as 8 char ascii hex vals)
+	uint32_t *dest = getCamData(); // pointer to image data array
+	uint32_t idx=0;
+	uint32_t val;
+	for(int i=0; i<numMsgs; i++){
+		adup->RX(msg);
+		printf("RX'd img msg [%d] of [%d]\n", idx, numMsgs);
+		for(int j=0; j<msg->len; j+=8){
+			// striding by 8 on each iteration for 8 chars -> 4 bytes of data
+			val = strtol(&msg->buf[j], msg->buf[j+8], 16);
+			dest[idx]=val;
+			idx++;
+		}
+	}
+
+	sprintf(msg->buf, "OK");
+	msg->len = strlen(msg->buf);
 }
+
 void adup_pc_handler(msg_t *msg){
 	printf("called adup_pc_handler\n");
 	switch(msg->cmd){
