@@ -138,7 +138,7 @@ class max78000_gui():
         ret.appendPayload(ret0.payload())
         ret.appendPayload(ret1.payload())
         ret.appendPayload(ret2.payload())
-        ret.appendPayload(ret3.payload())               
+        ret.appendPayload(ret3.payload())
         print(ret.toString())
         
         dne = self._adup.RX() # capture a final DONE message        
@@ -147,7 +147,18 @@ class max78000_gui():
         ba = bytes.fromhex(ret.payload())
         print("converted 32k hex into [" + str(len(ba)) + "] bytes")
         
-        im = Image.frombuffer('L', (128,128), ba, 'raw', 'L', 0, 1)
+        rxdata = np.frombuffer(ba, dtype=np.int8)
+        imgdata = np.delete(rxdata, np.arange(0, rxdata.size, 4))
+        imgdata = np.reshape(imgdata(3,128,128))
+        imgdata=np.moveaxis(imgdata,0,2)
+
+        imgdata_unsigned = np.array((3,128,128),dtype = np.uint8)
+        imgdata_unsigned = imgdata + 128
+
+        im=Image.fromarray(imgdata_unsigned.astype('uint8'),'RGB')
+        im.save("training_pictures/" + str(epoch) + " best_patch.png")
+        
+        #im = Image.frombuffer('L', (128,128), ba, 'raw', 'L', 0, 1)
         
         ##### scale up by 2x #####
         w,h=im.size
