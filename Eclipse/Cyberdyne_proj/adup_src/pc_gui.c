@@ -15,6 +15,7 @@ extern void run_demo(int *image, int *voice, bool *shoot, bool *cheat);
 extern void camera_capture(uint8_t **buf, uint32_t *sz);
 extern void ascii_capture(uint8_t *buf, int *sz);
 
+
 //static uint8_t cam_data[128*128];
 
 void adup_pc_handler(msg_t *msg){

@@ -85,7 +85,11 @@ void delay(uint32_t tick){
 }
 
 extern bool btn0_pressed_ai;
+extern bool btn0_capture_image;
+extern bool adup_init_done;
 
+int image_processing_phase1();
+int image_processing_phase2();
 /* **************************************************************************** */
 
 uint32_t *getCamData(void){
@@ -393,8 +397,8 @@ int ai_setup(void){
 }
 
 void ai_loop(void){
-	if(btn0_pressed_ai){
-		int pb0 = 0;
+	if(btn0_pressed_ai && btn0_capture_image){
+//		int pb0 = 0;
 		printf("********** The Game Begins Now, press PB1 to start  **********\r\n");
 		start_image_processing();
 		start_voice_recog();
@@ -402,7 +406,13 @@ void ai_loop(void){
 	#ifdef TFT_ENABLE
 		MXC_TFT_ClearScreen();
 	#endif
+		btn0_capture_image=false;
 		btn0_pressed_ai=false;
+	}
+	else if(btn0_capture_image){
+		printf("capturing image\n");
+		image_processing_phase1();
+		btn0_capture_image=false;
 	}
 }
 
@@ -417,17 +427,11 @@ int ai_main(void) {
 
 
 static int start_image_processing() {
+	image_processing_phase1();
+	image_processing_phase2();
+}
 
-	int i;
-	int digs, tens;
-
-	int result[CNN_NUM_IMAGE_OUTPUTS]; // = {0};
-
-
-	//	char buff[TFT_BUFF_SIZE];
-
-	cnn_valid_state_image();
-
+int image_processing_phase1(){
 	LED_Off(LED1);
 	LED_Off(LED2);
 #ifdef USE_SAMPLEDATA
@@ -437,7 +441,23 @@ static int start_image_processing() {
 #else
 	capture_process_camera();
 #endif
+}
 
+int image_processing_phase2() {
+
+	int i;
+	int digs, tens;
+
+	int result[CNN_NUM_IMAGE_OUTPUTS]; // = {0};
+
+
+	//	char buff[TFT_BUFF_SIZE];
+
+
+
+
+
+	cnn_valid_state_image();
 	cnn_image_start();
 	cnn_load_input();
 

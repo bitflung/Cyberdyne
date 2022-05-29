@@ -24,6 +24,9 @@
 
 
 extern uint32_t *getCamData(void);
+extern int image_processing_phase1();
+extern int image_processing_phase2();
+
 C_ADUP *adup;
 
 // NOTE: I've set the ADUP internal buffer (UART circular buffer) such that the max safe packet size is 128d (0x80)
@@ -42,11 +45,16 @@ void camera_capture(uint32_t **buf, uint32_t *sz);
 void ascii_capture(uint8_t *buf, int *sz);
 
 extern bool btn1_pressed_adup; // sticky once set by pb1 callback
+extern bool btn0_capture_image;
+extern bool btn0_pressed_ai;
 bool adup_init_done=false;
 
 void run_demo(int *image, int *voice, bool *shoot, bool *cheat){
 	printf("running the demo...\n");
+	btn0_capture_image=true;
 
+	//image_processing_phase1();
+	//image_processing_phase2();
 	*image = 45; // 45% confident you are human based on image
 	*voice = 78; // 78% conf you are human based on voice
 	*shoot = true; // firmware decided to shoot you
@@ -91,7 +99,7 @@ void main_adup_setup(void){
 
 	printf("this is the console port (press return 3 times in ADUP term to sync)\n");
 
-	adup = C_ADUP_init(115200); // passed in baud rate not yet resepcted by MAXIM drivers
+	adup = C_ADUP_init(230400); // passed in baud rate not yet resepcted by MAXIM drivers
 	adup->setMsg(&bigmsg);
 	adup->reg_callback(adup_app_handler);
 

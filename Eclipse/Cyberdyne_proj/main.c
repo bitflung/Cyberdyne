@@ -46,16 +46,18 @@ extern void ai_loop(void);
 extern int ai_setup(void);
 
 bool btn0_pressed_ai;
+bool btn0_capture_image;
 bool btn1_pressed_adup; // sticky once set to true; eventually we can fire a command from the PC to disconnect?
 
 
 // -------------------
-void cb_PB_0(void){
+void cb_PB_0(void *v){
 	printf("RX'd PB0 event\n");
+	btn0_capture_image=true;
 	btn0_pressed_ai=true;
 }
 
-void cb_PB_1(void){
+void cb_PB_1(void *v){
 	printf("RX'd PB1event\n");
 	btn1_pressed_adup=true;
 }
