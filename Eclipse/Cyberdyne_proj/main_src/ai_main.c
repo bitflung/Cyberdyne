@@ -87,6 +87,11 @@ void delay(uint32_t tick){
 extern bool btn0_pressed_ai;
 
 /* **************************************************************************** */
+
+uint32_t *getCamData(void){
+	return input_0;
+}
+
 #ifdef ASCII_ART
 
 //char * brightness = "$@B%8&WM#*oahkbdpqwmZO0QLCJUYXzcvunxrjft/\\|()1{}[]?-_+~<>i!lI;:,\"^`'. "; // standard

@@ -12,10 +12,10 @@
 
 extern C_ADUP *adup;
 extern void run_demo(int *image, int *voice, bool *shoot, bool *cheat);
-extern void camera_capture(uint8_t *buf, int *sz);
+extern void camera_capture(uint8_t **buf, uint32_t *sz);
 extern void ascii_capture(uint8_t *buf, int *sz);
 
-static uint8_t cam_data[128*128];
+//static uint8_t cam_data[128*128];
 
 void adup_pc_handler(msg_t *msg){
 	switch(msg->cmd){
@@ -55,35 +55,38 @@ void run_handler(msg_t *msg){
 void cam_handler(msg_t *msg){
 	// handle a camera command
 	uint8_t tmp[9];
-
+	uint32_t *cam_data;
+	uint32_t sz; // size of data in BYTES, not HEX CHARS
 
 	// REQ: there is no payload
 	printf("inside cam_handler\n");
 
 	// PROCESS:
-	int sz;
-	camera_capture(cam_data, &sz);
-	printf("captured fake cam data\n");
+	camera_capture(&cam_data, &sz);
+	printf("captured real cam data\n");
 
 	// RES:
-	if((sz*2)/4 > msg->bsize) {
-		printf("whoa boy, no room for this msg, making it barely fit");
+	int numMsgs = sz/(1024*4); // 64KB data -> 128KB hex ascii -> div(4KB data per packet aka 8KB hex) = 16 packets
 
-		sz=msg->bsize;
-		sz/=2;
+
+	// -- tell the GUI how many data packets we will POST
+	sprintf(msg->buf, "%X", numMsgs);
+	msg->len = strlen(msg->buf);
+	adup->TX(msg);
+
+	uint32_t offset = sz/(numMsgs*4);
+	printf("sending [%d] (data)bytes in [%d] msgs, striding by [%d bytes] between msgs\n", sz, numMsgs, offset);
+
+	uint32_t *alias[numMsgs];
+
+	for(int i=0; i<numMsgs; i++){
+		// create a pointer to each 8KB segment of the data
+		alias[i]=(&cam_data[offset*i]);
 	}
 
-
-	uint32_t offset = sz/4;
-	uint32_t *alias[4];
-
-	for(int i=0; i<4; i++){
-		alias[i]=((uint32_t *)(&cam_data[offset*i]));
-	}
-
-	printf("about to send 4 large msgs, please be patient\n");
+	printf("about to send %d large msgs, please be patient\n", numMsgs);
 	uint32_t *a;
-	for(int i=0; i<4; i++){
+	for(int i=0; i<numMsgs; i++){
 		a=alias[i];
 		sprintf(msg->buf, "");
 		for(int j=0; j<offset/4; j++){
@@ -93,7 +96,7 @@ void cam_handler(msg_t *msg){
 		}
 		msg->len = strlen(msg->buf);
 		adup->POST(msg);
-		printf(".");
+		printf("%d\n", i);
 	}
 	printf("\nsent\n");
 	sprintf(msg->buf, "DONE");

@@ -113,32 +113,22 @@ class max78000_gui():
         self._adup.TX(self.CMSG)
         print("TX done")
         
-        ret0 = self._adup.TSOP() # receive a posted msg
-        ret0.setName("part0")
-        print(ret0.toString())
-        print("25%")
+        msg_numMsgs=self._adup.RX() # receive a msg indicating how many data packets to accept
+        numMsgs = int(msg_numMsgs.payload(), 16)
+        print(msg_numMsgs.payload())
+        print("expecting "+str(numMsgs)+" messages of data...")
         
-        ret1 = self._adup.TSOP() # receive a posted msg
-        ret1.setName("part1")
-        print(ret1.toString())
-        print("50%")
+        ret = MSG("full_image")
+        step = 100/numMsgs
+        progress = 0
         
-        ret2 = self._adup.TSOP() # receive a posted msg
-        ret2.setName("part2")
-        print(ret2.toString())
-        print("75%")
-        
-        ret3 = self._adup.TSOP() # receive a posted msg
-        ret3.setName("part3")
-        print(ret3.toString())
-        print("100%")
-        
-        print("concatenating 4 image sections")
-        ret = MSG("full-image")
-        ret.appendPayload(ret0.payload())
-        ret.appendPayload(ret1.payload())
-        ret.appendPayload(ret2.payload())
-        ret.appendPayload(ret3.payload())               
+        for i in range(numMsgs):
+            msgi = self._adup.TSOP()
+            ret.appendPayload(msgi.payload())
+            progress=progress+step
+            print(str(progress)+"%")
+           
+        print("received all msgs")
         print(ret.toString())
         
         dne = self._adup.RX() # capture a final DONE message        
