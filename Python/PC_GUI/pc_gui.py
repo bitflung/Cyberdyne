@@ -8,6 +8,7 @@ ready = False
 gui = max78000_gui("Human/Robot Tester")
 
 adup = ADUP()
+adup.getAllPorts()
 ports = adup.getMatchPorts("COM10")
 for p in ports:
     print(p)

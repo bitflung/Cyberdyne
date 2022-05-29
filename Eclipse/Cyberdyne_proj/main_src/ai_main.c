@@ -87,6 +87,11 @@ void delay(uint32_t tick){
 extern bool btn0_pressed_ai;
 
 /* **************************************************************************** */
+
+uint32_t *getCamData(void){
+	return input_0;
+}
+
 #ifdef ASCII_ART
 
 //char * brightness = "$@B%8&WM#*oahkbdpqwmZO0QLCJUYXzcvunxrjft/\\|()1{}[]?-_+~<>i!lI;:,\"^`'. "; // standard
@@ -392,6 +397,8 @@ void ai_loop(void){
 		int pb0 = 0;
 		printf("********** The Game Begins Now, press PB1 to start  **********\r\n");
 		start_image_processing();
+		start_voice_recog();
+		MXC_SYS_ClockEnable(MXC_SYS_PERIPH_CLOCK_CNN);
 	#ifdef TFT_ENABLE
 		MXC_TFT_ClearScreen();
 	#endif
@@ -501,8 +508,7 @@ static int start_image_processing() {
 
 	}
 
-	start_voice_recog();
-	MXC_SYS_ClockEnable(MXC_SYS_PERIPH_CLOCK_CNN);
+
 	//		memset(buff, 32, TFT_BUFF_SIZE);
 	//		TFT_Print(buff, TFT_X_START + 30, TFT_Y_START + IMAGE_SIZE_Y + 10,
 	//				font_1, sprintf(buff, "%dms", cnn_image_time / 1000));

@@ -113,32 +113,22 @@ class max78000_gui():
         self._adup.TX(self.CMSG)
         print("TX done")
         
-        ret0 = self._adup.TSOP() # receive a posted msg
-        ret0.setName("part0")
-        print(ret0.toString())
-        print("25%")
+        msg_numMsgs=self._adup.RX() # receive a msg indicating how many data packets to accept
+        numMsgs = int(msg_numMsgs.payload(), 16)
+        print(msg_numMsgs.payload())
+        print("expecting "+str(numMsgs)+" messages of data...")
         
-        ret1 = self._adup.TSOP() # receive a posted msg
-        ret1.setName("part1")
-        print(ret1.toString())
-        print("50%")
+        ret = MSG("full_image")
+        step = 100/numMsgs
+        progress = 0
         
-        ret2 = self._adup.TSOP() # receive a posted msg
-        ret2.setName("part2")
-        print(ret2.toString())
-        print("75%")
-        
-        ret3 = self._adup.TSOP() # receive a posted msg
-        ret3.setName("part3")
-        print(ret3.toString())
-        print("100%")
-        
-        print("concatenating 4 image sections")
-        ret = MSG("full-image")
-        ret.appendPayload(ret0.payload())
-        ret.appendPayload(ret1.payload())
-        ret.appendPayload(ret2.payload())
-        ret.appendPayload(ret3.payload())
+        for i in range(numMsgs):
+            msgi = self._adup.TSOP()
+            ret.appendPayload(msgi.payload())
+            progress=progress+step
+            print(str(progress)+"%")
+           
+        print("received all msgs")
         print(ret.toString())
         
         dne = self._adup.RX() # capture a final DONE message        
@@ -147,16 +137,21 @@ class max78000_gui():
         ba = bytes.fromhex(ret.payload())
         print("converted 32k hex into [" + str(len(ba)) + "] bytes")
         
+        print("we were supposed to get " + str(4*128*128)+ " bytes!")
+        
         rxdata = np.frombuffer(ba, dtype=np.int8)
-        imgdata = np.delete(rxdata, np.arange(0, rxdata.size, 4))
-        imgdata = np.reshape(imgdata(3,128,128))
-        imgdata=np.moveaxis(imgdata,0,2)
 
-        imgdata_unsigned = np.array((3,128,128),dtype = np.uint8)
+        imgdata = np.delete(rxdata, np.arange(0, rxdata.size, 4))
+        #change the two lines below where it has 128//4 to 128 when we fix the issue with sending all the data
+        #imgdata = np.reshape(imgdata,(3,128,128))
+        imgdata = np.reshape(imgdata,(128//4,128,3))
+        #imgdata=np.moveaxis(imgdata,0,2)
+
+        imgdata_unsigned = np.array((3,128,128//4),dtype = np.uint8)
         imgdata_unsigned = imgdata + 128
 
         im=Image.fromarray(imgdata_unsigned.astype('uint8'),'RGB')
-        im.save("training_pictures/" + str(epoch) + " best_patch.png")
+        im.save("tmp.png")
         
         #im = Image.frombuffer('L', (128,128), ba, 'raw', 'L', 0, 1)
         

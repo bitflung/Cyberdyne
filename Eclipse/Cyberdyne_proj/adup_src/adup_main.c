@@ -23,6 +23,7 @@
 #include "c_adup.h"
 
 
+extern uint32_t *getCamData(void);
 C_ADUP *adup;
 
 // NOTE: I've set the ADUP internal buffer (UART circular buffer) such that the max safe packet size is 128d (0x80)
@@ -37,7 +38,7 @@ void adup_app_handler(msg_t *msg);
 extern void adup_pc_handler(msg_t *msg);
 
 void run_demo(int *image, int *voice, bool *shoot, bool *cheat);
-void camera_capture(uint8_t *buf, int *sz);
+void camera_capture(uint32_t **buf, uint32_t *sz);
 void ascii_capture(uint8_t *buf, int *sz);
 
 extern bool btn1_pressed_adup; // sticky once set by pb1 callback
@@ -55,17 +56,13 @@ void run_demo(int *image, int *voice, bool *shoot, bool *cheat){
 	return;
 }
 
-void camera_capture(uint8_t *buf, int *sz){
-	int size=128*128;
+void camera_capture(uint32_t **buf, uint32_t *sz){
+	uint32_t * dat = getCamData(); //input_0; //[IMAGE_SIZE_X * IMAGE_SIZE_Y] // uint32_t[128*128] == 64KB
+	*sz=128*128*4;
 
-	// shovel camera data into the buffer
-	for(int i=0; i<size; i++){
-		buf[i]='F';
-	}
+	*buf = dat;
 
-	*sz = size;
-
-	printf("ran camera_capture()\n");
+	printf("shared most recent cam_capture result\n");
 	return;
 }
 
