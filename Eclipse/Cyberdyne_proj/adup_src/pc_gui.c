@@ -66,53 +66,38 @@ void cam_handler(msg_t *msg){
 	printf("captured fake cam data\n");
 
 	// RES:
-	if(sz*2 > msg->bsize) {
+	if((sz*2)/4 > msg->bsize) {
 		printf("whoa boy, no room for this msg, making it barely fit");
 
 		sz=msg->bsize;
 		sz/=2;
 	}
 
-	sprintf(msg->buf, "");
-	uint32_t *alias = ((uint32_t *)(cam_data));
-	for(int i=0; i<sz/4; i++){
-		// TODO: note that we assume sz is evenly divisible by 4!!
-		sprintf(tmp, "%08X", alias[i]);
-		strcat(msg->buf, tmp);
+
+	uint32_t offset = sz/4;
+	uint32_t *alias[4];
+
+	for(int i=0; i<4; i++){
+		alias[i]=((uint32_t *)(&cam_data[offset*i]));
 	}
 
-#if 1
-	msg->len = strlen(msg->buf);
-	adup->POST(msg);
+	printf("about to send 4 large msgs, please be patient\n");
+	uint32_t *a;
+	for(int i=0; i<4; i++){
+		a=alias[i];
+		sprintf(msg->buf, "");
+		for(int j=0; j<offset/4; j++){
+			// TODO: note that we assume sz is evenly divisible by 4!!
+			sprintf(tmp, "%08X", a[j]);
+			strcat(msg->buf, tmp);
+		}
+		msg->len = strlen(msg->buf);
+		adup->POST(msg);
+		printf(".");
+	}
+	printf("\nsent\n");
 	sprintf(msg->buf, "DONE");
 	msg->len = 4;
-
-#else
-	uint8_t *orig_buf = msg->buf;
-	int origLen = strlen(msg->buf);
-	int curLen = origLen;
-	int step = 128;
-	int idx=0;
-	printf("sending cam response in a bunch of packets\n");
-	msg->len = step;
-	while(curLen > step){
-		printf("cam send idx[%d]\n", idx);
-		msg->buf = &(msg->buf[idx]);
-		adup->TX(msg);
-		idx+=step;
-		curLen-=step;
-	}
-	if(curLen > 0){
-		printf("cam send idx[%d]\n", idx);
-		msg->len = curLen;
-		msg->buf = &(msg->buf[idx]);
-		adup->TX(msg);
-		curLen-=msg->len;
-	}
-
-	sprintf(msg->buf, "DONE");
-	msg->len = strlen(msg->buf);
-#endif
 }
 
 void ascii_handler(msg_t *msg){

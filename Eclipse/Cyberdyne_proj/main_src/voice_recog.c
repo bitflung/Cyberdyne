@@ -666,7 +666,7 @@ int start_voice_recog(void)
         }
 
         /* Stop demo if PB1 is pushed */
-        if (wordCounter >= 100) {
+        if (wordCounter >= 10) {
             PR_INFO("Stop! You had enough chances, you look human\r\n");
             PR_DEBUG("Time to DIE!!! START THE KILLING!!!\n");
             for(int i = 0; i < 22; i++)

@@ -273,7 +273,7 @@ void c_protocol_TxProtHandler(msg_t *msg, bool useAcks){
   unsigned int it_len = msg->len; // characters remaining of original msg to be sent out
   
   do {
-	  printf("Yet to send: [%d]\n", it_len);
+	  //printf("Yet to send: [%d]\n", it_len);
 
     // send the TX header (cmd, len)
     if(it_len > _prot.PROT_MAX_PAYLOAD) {
@@ -284,13 +284,13 @@ void c_protocol_TxProtHandler(msg_t *msg, bool useAcks){
       _prot._txMsg.len=it_len;
       _prot.putHeader(&_prot._txMsg);
     }
-    printf("\theader sent\n");
+    //printf("\theader sent\n");
     
     // send the TX payload (if any)
     if(_prot._txMsg.len > 0) {
       _prot.putContent(&_prot._txMsg); // blocking
     }
-    printf("\tcontent[%d] sent\n", _prot._txMsg.len);
+    //printf("\tcontent[%d] sent\n", _prot._txMsg.len);
     // shift the buffer pointer appropriately
     _prot._txMsg.buf = &(_prot._txMsg.buf[_prot._txMsg.len]);
     

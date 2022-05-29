@@ -82,7 +82,9 @@ CMSIS_ROOT=$(LIBS_DIR)/CMSIS
 export CMSIS_ROOT
 
 # Source files for this test (add path to VPATH below)
-SRCS  = ./main.c
+SRCS = main.c
+
+SRCS  += /main_src/ai_main.c
 SRCS  += /main_src/cnn.c
 SRCS  += /main_src/cnn_image.c
 SRCS  += /main_src/cnn_voice.c
@@ -95,6 +97,7 @@ SRCS += TFT/fthr/logo_rgb565.c
 
 
 #SRCS  = /main_src/hpf.c
+SRCS += /adup_src/adup_main.c
 SRCS += /adup_src/pc_gui.c
 SRCS += /adup_src/c_adup_comms.c
 SRCS += /adup_src/c_adup_handler.c

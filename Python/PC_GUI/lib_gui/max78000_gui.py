@@ -113,17 +113,37 @@ class max78000_gui():
         self._adup.TX(self.CMSG)
         print("TX done")
         
-        ret = self._adup.TSOP() # receive a posted msg
+        ret0 = self._adup.TSOP() # receive a posted msg
+        ret0.setName("part0")
+        print(ret0.toString())
+        print("25%")
+        
+        ret1 = self._adup.TSOP() # receive a posted msg
+        ret1.setName("part1")
+        print(ret1.toString())
+        print("50%")
+        
+        ret2 = self._adup.TSOP() # receive a posted msg
+        ret2.setName("part2")
+        print(ret2.toString())
+        print("75%")
+        
+        ret3 = self._adup.TSOP() # receive a posted msg
+        ret3.setName("part3")
+        print(ret3.toString())
+        print("100%")
+        
+        print("concatenating 4 image sections")
+        ret = MSG("full-image")
+        ret.appendPayload(ret0.payload())
+        ret.appendPayload(ret1.payload())
+        ret.appendPayload(ret2.payload())
+        ret.appendPayload(ret3.payload())               
         print(ret.toString())
         
-        dne = self._adup.RX()
-        
+        dne = self._adup.RX() # capture a final DONE message        
         print("RX'd camera data; converting to image")
-#         pay = ret.payload()
-#         for i in range(0, ret.len(), 2):
-#             # for each pair of character in the payload
-#             tst = pay[i:i+2]
-            
+        
         ba = bytes.fromhex(ret.payload())
         print("converted 32k hex into [" + str(len(ba)) + "] bytes")
         

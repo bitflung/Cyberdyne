@@ -25,9 +25,10 @@
 
 C_ADUP *adup;
 
-// NOTE: I've set the ADUP internal buffers such that the max safe packet size is 64d (0x40)
+// NOTE: I've set the ADUP internal buffer (UART circular buffer) such that the max safe packet size is 128d (0x80)
 msg_t bigmsg;
-#define MSGBUF_SZ 16*1024*2+3 // 16KB, doubled for ASCII text variant to 32KB, represents the max possible msg size
+//#define MSGBUF_SZ 16*1024*2+3 // 16KB, doubled for ASCII text variant to 32KB, represents the max possible msg size
+#define MSGBUF_SZ (1*8*1024)+3 // couldn't fit even 16KB without stack collision; knocked it down to 8KB; will require sending 4 msgs
 uint8_t msgbuf[MSGBUF_SZ];
 
 void loop(void);
@@ -39,6 +40,8 @@ void run_demo(int *image, int *voice, bool *shoot, bool *cheat);
 void camera_capture(uint8_t *buf, int *sz);
 void ascii_capture(uint8_t *buf, int *sz);
 
+extern bool btn1_pressed_adup; // sticky once set by pb1 callback
+bool adup_init_done=false;
 
 void run_demo(int *image, int *voice, bool *shoot, bool *cheat){
 	printf("running the demo...\n");
@@ -81,18 +84,10 @@ void ascii_capture(uint8_t *buf, int *sz){
 }
 
 void adup_app_handler(msg_t *msg){
-	// this handler to be registered as a callback in ADUP and automatically called when we RX a msg that isn't handled by the stack itself
-	//if(msg->cmd!='A') adup->error("Unsupported command prefix");
-//	switch(msg->cmd){
-//	default:
-//		adup->error("Unsupported command prefix");
-//		break;
-//	}
-//	adup->TX(msg);
 	adup_pc_handler(msg);
 }
 
-void setup(void){
+void main_adup_setup(void){
 	bigmsg.bsize=MSGBUF_SZ;
 	bigmsg.buf=msgbuf;
 	bigmsg.len=0;
@@ -104,23 +99,29 @@ void setup(void){
 	adup->reg_callback(adup_app_handler);
 
 	printf("ADUP init done\n");
+	adup_init_done=true;
 }
 
-void loop(void){
-	adup->conditionalListen();
+void main_adup_loop(void){
+	if(btn1_pressed_adup){
+		if(!adup_init_done){
+			main_adup_setup();
+		}
+		adup->conditionalListen();
+	}
 }
 
-void background(void){
+void main_adup_background(void){
 	// insert system management code that should run once per loop
 	// e.g. handling wifi stack
 }
 
-int main(void){
-	setup();
+int main_adup_main(void){
+	main_adup_setup();
 
 	while(1){
-		loop();
-		background();
+		main_adup_loop();
+		main_adup_background();
 	}
 }
 
