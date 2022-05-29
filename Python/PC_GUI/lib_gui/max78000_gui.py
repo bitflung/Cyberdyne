@@ -603,12 +603,8 @@ class max78000_gui():
         print("RX'd camera data; converting to image")
         
         ba = bytes.fromhex(ret.payload())
-<<<<<<< Updated upstream
         print("converted 32k hex into [" + str(len(ba)) + "] bytes")
-        
-=======
-        print("converted 32k hex into [" + str(len(ba)) + "] bytes")        
->>>>>>> Stashed changes
+
         #print("we were supposed to get " + str(4*128*128)+ " bytes!")
         
         # flush stdout
@@ -624,20 +620,12 @@ class max78000_gui():
 
         imgdata_unsigned = np.array((3,128,128),dtype = np.uint8)
         imgdata_unsigned = imgdata + 128
-<<<<<<< Updated upstream
 
-=======
-        
->>>>>>> Stashed changes
         #swap red and blue so they are in the correct order
         imgdata_tmp= np.copy(imgdata_unsigned)
         imgdata_unsigned[:,:,0] = imgdata_unsigned[:,:,2]
         imgdata_unsigned[:,:,2] = imgdata_tmp[:,:,0]
-<<<<<<< Updated upstream
 
-=======
-        
->>>>>>> Stashed changes
         im=Image.fromarray(imgdata_unsigned.astype('uint8'),'RGB')
         
         im = self.imageFormat(im, True)
