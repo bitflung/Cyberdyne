@@ -15,6 +15,8 @@
 #include "sampledata.h"
 #include "mxc_delay.h"
 #include "camera.h"
+#include "c_adup.h"
+
 #ifdef BOARD_EVKIT_V1
 #include "bitmap.h"
 #include "tft_ssd2119.h"
@@ -24,6 +26,8 @@
 #endif
 
 #define BOARD_FTHR_REVA
+
+#define ASCII_TO_ADUP true
 
 // Comment out USE_SAMPLEDATA to use Camera module
 //#define USE_SAMPLEDATA
@@ -58,6 +62,7 @@ const char classes[CNN_NUM_IMAGE_OUTPUTS][10] = { "HUMAN", "ROBOT" };
 extern char *imageResults;//[40];
 extern char *voiceResults;//[40];
 extern char *decisionResults;//[40];
+extern bool btn1_pressed_adup;
 
 IMAGE_t iClassifier;
 
@@ -90,6 +95,7 @@ void delay(uint32_t tick){
 extern bool btn0_pressed_ai;
 extern bool btn0_capture_image;
 extern bool adup_init_done;
+extern C_ADUP *adup;
 
 int image_processing_phase1();
 int image_processing_phase2();
@@ -105,6 +111,13 @@ uint32_t *getCamData(void){
 char *brightness = "@%#*+=-:. "; // simple
 #define RATIO 2  // ratio of scaling down the image to display in ascii
 void asciiart(uint8_t *img) {
+	msg_t dmsg;
+	char dbuf[2];
+	dmsg.cmd='D';
+	dmsg.bsize=1;
+	dmsg.buf=dbuf;
+	dmsg.len=1;
+
 	int skip_x, skip_y;
 	uint8_t r, g, b, Y;
 	uint8_t *srcPtr = img;
@@ -124,8 +137,12 @@ void asciiart(uint8_t *img) {
 
 			// Y = 0.2126 * r + 0.7152 * g + 0.0722 * b;
 			Y = (3 * r + b + 4 * g) >> 3; // simple luminance conversion
-			if ((skip_x == RATIO) && (skip_y == RATIO))
-				printf("%c", brightness[l - (Y * l / 255)]);
+
+			if ((skip_x == RATIO) && (skip_y == RATIO)){
+				sprintf(dbuf, "%c", brightness[l - (Y * l / 255)]);
+				if(ASCII_TO_ADUP && btn1_pressed_adup) adup->POST(&dmsg);
+				else printf("%c", dbuf[0]);
+			}
 
 			skip_x++;
 			if (skip_x > RATIO)
@@ -133,7 +150,9 @@ void asciiart(uint8_t *img) {
 		}
 		skip_y++;
 		if (skip_y > RATIO) {
-			printf("\n");
+			sprintf(dbuf, "\n");
+			if(ASCII_TO_ADUP && btn1_pressed_adup) adup->POST(&dmsg);
+			else printf("%c", dbuf[0]);
 			skip_y = 1;
 		}
 	}
@@ -447,6 +466,12 @@ int image_processing_phase1(){
 }
 
 int image_processing_phase2() {
+	msg_t dmsg;
+	//char dbuf[]="This is a debug msg\n";
+	//dmsg.bsize=strlen(dbuf);
+	dmsg.cmd='D';
+	//dmsg.len=dmsg.bsize;
+	//dmsg.buf=dbuf;
 
 	int i;
 	int digs, tens;

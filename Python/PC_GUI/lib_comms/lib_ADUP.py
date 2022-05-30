@@ -278,23 +278,30 @@ class ADUP():
         expcmd = ""
         
         while (getLen > self.PROT_MAX_PAYLOAD):
-            getCmd, tmpLen = self.getHeader();
-            
+            getCmd, tmpLen = self.getHeader();            
             if not expcmd:
                 expcmd = getCmd
                 
+            #print("expected cmd ["+expcmd+"]")
+            
             getLen = tmpLen;
 
             if (getCmd == "!"):
                 print("RX'd error header from MCU!");
                 self.serQuit(1);
-
-            if (getCmd == "D"):
+            
+            while(getCmd == "D"):
                 debugStr = str(self.serRead(getLen));
                 if(self._debugCB):
                     self._debugCB(debugStr)
                 else:
-                    print("DEBUG MSG: "+debugStr)
+                    print("DEBUG MSG: ["+debugStr+"]")
+                    
+                getCmd, tmpLen = self.getHeader();
+                if "D" in expcmd:
+                    expcmd = getCmd
+                getLen = tmpLen;
+                
             else:
                 if (getCmd != expcmd):
                     print("ERROR in RxProtHandler: unexpected response header");

@@ -44,7 +44,7 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <string.h>
-
+#include "c_adup.h"
 #include "mxc_sys.h"
 #include "fcr_regs.h"
 #include "icc.h"
@@ -73,6 +73,11 @@
 extern uint32_t resultsSize;
 extern char *voiceResults;//[40];
 extern bool cheatCode;
+extern bool btn1_pressed_adup;
+extern C_ADUP *adup;
+
+msg_t dmsg;
+char dbuf[50];
 
 static void prepare_timer();
 static uint8_t check_Konami_code(const char *word);
@@ -292,7 +297,11 @@ void WUT_IRQHandler()
 /* **************************************************************************** */
 
 int start_voice_recog(int numTries)
-{
+{	dmsg.cmd='D';
+	dmsg.bsize=50;
+	dmsg.buf=dbuf;
+	dmsg.len=0;
+
     uint32_t sampleCounter = 0;
     mxc_tmr_unit_t units;
     cheatCode=false;
@@ -357,8 +366,13 @@ int start_voice_recog(int numTries)
     /* Configure P2.5, turn on the CNN Boost */
    cnn_boost_enable(MXC_GPIO2, MXC_GPIO_PIN_5);
 
-    PR_INFO("CYBERDYNE: SPEAK WHEN WE SAY START OR...!!!", VERSION);
-    delay(2000000);
+    //PR_INFO("CYBERDYNE: SPEAK WHEN WE SAY START OR...!!!", VERSION);
+    snprintf(dmsg.buf, dmsg.bsize, "CYBERDYNE: SPEAK WHEN WE SAY START OR...!!!\n");
+    dmsg.len = strlen(dmsg.buf);
+    if(btn1_pressed_adup) adup->POST(&dmsg);
+    else printf(dmsg.buf);
+
+    delay(2000000); // TODO: JTE, i commented out this super long delay...
 //    PR_INFO("\n***** Init *****\n");
     memset(pAI85Buffer, 0x0, sizeof(pAI85Buffer));
     memset(pPreambleCircBuffer, 0x0, sizeof(pPreambleCircBuffer));
@@ -646,27 +660,54 @@ int start_voice_recog(int numTries)
                 /* find detected class with max probability */
                 ret = check_inference(ml_voice_softmax, ml_voice_data, &out_class, &probability);
 
-                PR_DEBUG("----------------------------------------- \n");
+                //PR_DEBUG("----------------------------------------- \n");
+                snprintf(dmsg.buf, dmsg.bsize, "----------------------------------------- \n");
+				dmsg.len = strlen(dmsg.buf);
+				if(btn1_pressed_adup) adup->POST(&dmsg);
+				else printf(dmsg.buf);
 
                 if (!ret) {
-                    PR_DEBUG("Not Sure! Speak again! ");
+                    //PR_DEBUG("Not Sure! Speak again! \n");
+                    snprintf(dmsg.buf, dmsg.bsize, "Not Sure! Speak again! \n");
+					dmsg.len = strlen(dmsg.buf);
+					if(btn1_pressed_adup) adup->POST(&dmsg);
+					else printf(dmsg.buf);
                 }else{
-                	PR_DEBUG("Detected word: %s (%0.1f%%)", keywords[out_class],
-                			probability);
+                	//PR_DEBUG("Detected word: %s (%0.1f%%)", keywords[out_class], probability);
+                	snprintf(dmsg.buf, dmsg.bsize, "Detected word: %s (%0.1f%%)\n", keywords[out_class], probability);
+					dmsg.len = strlen(dmsg.buf);
+					if(btn1_pressed_adup) adup->POST(&dmsg);
+					else printf(dmsg.buf);
+
                 	//char tmp[100];
                 	snprintf(voiceResults, resultsSize, "%s (%0.1f%%)", keywords[out_class], probability);
                 	//printf("%s\n", voiceResults);
                 	if((check_Konami_code(keywords[out_class]) == 1 )|| (check_for_entity(keywords[out_class], (uint32_t) probability) == 1)){
                 		cheatCode=true;
-                		PR_INFO("\nGood News: You are ROBOT, Welcome to Cyberdyne Planetary!!!\n");
-                		for(int i = 0; i < 28; i++)
-                		            	printf("%s", robot[i]);
+                		//PR_INFO("\nGood News: You are ROBOT, Welcome to Cyberdyne Planetary!!!\n");
+						snprintf(dmsg.buf, dmsg.bsize, "\nGood News: You are ROBOT, Welcome to Cyberdyne Planetary!!!\n");
+						dmsg.len = strlen(dmsg.buf);
+						if(btn1_pressed_adup) adup->POST(&dmsg);
+						else printf(dmsg.buf);
 
+                		for(int i = 0; i < 28; i++){
+                			dmsg.buf = robot[i];
+                			//snprintf(dmsg.buf, dmsg.bsize, "\nGood News: You are ROBOT, Welcome to Cyberdyne Planetary!!!\n");
+							dmsg.len = strlen(dmsg.buf);
+							if(btn1_pressed_adup) adup->POST(&dmsg);
+							else printf(dmsg.buf);
+                			//printf("%s", robot[i]);
+                		}
+                		dmsg.buf = dbuf;
                 		break;
                 	}
                 }
 
-                PR_DEBUG("\n----------------------------------------- \n");
+                //PR_DEBUG("\n----------------------------------------- \n");
+                snprintf(dmsg.buf, dmsg.bsize, "\n----------------------------------------- \n");
+				dmsg.len = strlen(dmsg.buf);
+				if(btn1_pressed_adup) adup->POST(&dmsg);
+				else printf(dmsg.buf);
 
                 Max = 0;
                 Min = 0;
@@ -676,8 +717,18 @@ int start_voice_recog(int numTries)
 
         /* Stop demo if PB1 is pushed */
         if (wordCounter >= numTries) {
-            PR_INFO("Stop! You had enough chances, you sound human\r\n");
-            PR_DEBUG("Time to DIE!!! START THE KILLING!!!\n");
+            //PR_INFO("Stop! You had enough chances, you sound human\r\n");
+            snprintf(dmsg.buf, dmsg.bsize, "Stop! You had enough chances, you sound human\r\n");
+			dmsg.len = strlen(dmsg.buf);
+			if(btn1_pressed_adup) adup->POST(&dmsg);
+			else printf(dmsg.buf);
+
+            //PR_DEBUG("Time to DIE!!! START THE KILLING!!!\n");
+            snprintf(dmsg.buf, dmsg.bsize, "Time to DIE!!! START THE KILLING!!!\n");
+			dmsg.len = strlen(dmsg.buf);
+			if(btn1_pressed_adup) adup->POST(&dmsg);
+			else printf(dmsg.buf);
+
             int len = strlen(voiceResults);
             if(len==0) {
             	sprintf(voiceResults, "Unrecognized - ");
@@ -685,8 +736,15 @@ int start_voice_recog(int numTries)
             }
             int rem = resultsSize - len;
             strncat(voiceResults, rem, "probably human!");
-            for(int i = 0; i < 22; i++)
-            	printf("%s", gun[i]);
+            for(int i = 0; i < 22; i++){
+            	dmsg.buf=gun[i];
+            	//snprintf(dmsg.buf, dmsg.bsize, "Time to DIE!!! START THE KILLING!!!\n");
+				dmsg.len = strlen(dmsg.buf);
+				if(btn1_pressed_adup) adup->POST(&dmsg);
+				else printf(dmsg.buf);
+            	//printf("%s", gun[i]);
+            }
+            dmsg.buf = dbuf;
             procState = STOP;
             break;
         }
@@ -1206,6 +1264,10 @@ void TFT_End(uint16_t words)
 
 
 static void prepare_timer(){
+	dmsg.bsize=50;
+	dmsg.buf=dbuf;
+	dmsg.len=0;
+	dmsg.cmd='D';
 #ifdef WUT_ENABLE
     // Get ticks based off of microseconds
     mxc_wut_cfg_t cfg;
@@ -1266,13 +1328,22 @@ static void prepare_timer(){
     MXC_Delay(SEC(2)); // wait for debugger to connect
 #endif // #ifdef ENABLE_TFT
 
-    PR_INFO("\n*** START ***\n");
+    //PR_INFO("\n*** START ***\n");
+	snprintf(dmsg.buf, dmsg.bsize, "\n*** START ***\n");
+	dmsg.len = strlen(dmsg.buf);
+	if(btn1_pressed_adup) adup->POST(&dmsg);
+	else printf(dmsg.buf);
+
 #ifdef WUT_ENABLE
     MXC_WUT_Enable();  // Start WUT
 #endif
 }
 
 static uint8_t check_Konami_code(const char *word){
+	dmsg.bsize=50;
+	dmsg.buf=dbuf;
+	dmsg.len=0;
+
 	static uint8_t robocop = 0;
 	uint8_t result = 0;
 	if(strcmp(roboVoice[robocop], word) == 0){
@@ -1282,7 +1353,11 @@ static uint8_t check_Konami_code(const char *word){
 	}
 	if(robocop == 4){
 		result = 1;
-		printf("\nKONAMI CHEAT CODE!!!!\n");
+		//printf("\nKONAMI CHEAT CODE!!!!\n");
+		snprintf(dmsg.buf, dmsg.bsize, "\nKONAMI CHEAT CODE!!!!\n");
+		dmsg.len = strlen(dmsg.buf);
+		if(btn1_pressed_adup) adup->POST(&dmsg);
+		else printf(dmsg.buf);
 	}
 	return result;
 }

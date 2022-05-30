@@ -19,6 +19,11 @@ import binascii
 
 class max78000_gui():
     def __init__(self, name):
+        self.locked = False
+        self.lockCount=0
+        self.popWidgets = {'none':0}
+        self.consoleOpen=False
+        
         self.hbg_c="black"
         self.hbg_w=2
         self.f_padx=5
@@ -42,24 +47,90 @@ class max78000_gui():
         self.CMSG.setPayload("")
         self.VMSG.setPayload("")
         self.TMSG.setPayload("")
-        
-        
-        
+
         self.adup = None
         #self.run()
 
+    def lock(self, num=1):
+        self.locked=True
+        self.lockCount=self.lockCount+num
+        
+    def unlock(self, num=1):
+        self.lockCount=self.lockCount-num
+        if(self.lockCount <= 0):
+            self.lockCount=0
+            self.locked=False
+        
     def disableAll(self):
         for b in self.buttons:            
             b.configure(state='disable')
             
     def enableAll(self):
-        for b in self.buttons:            
-            b.configure(state='active')
+        if(self.locked):
+            print("not enabling widgets yet; more tasks running")
+        else:
+            for b in self.buttons:            
+                b.configure(state='active')
+        
+    def createConsole(self, hght, nam = "Close console to continue"):
+        if(self.consoleOpen):
+            print("console is already open")
+        else:
+            # create the popup window                        
+            self.popWidgets.clear()
+            
+            pop=tk.Toplevel(self.win)
+            pop.protocol("WM_DELETE_WINDOW", self.onConsoleClose)
+            
+            pop.title("Console")
+            pop.config(bg="white")
+            self.popWidgets['pop']=pop
+            
+            lbl = tk.Label(pop,
+                           text=nam,
+                           bg="white",
+                           fg="black",
+                           font=('Aerial', 12),
+                           anchor="w",
+                           width=40,
+                           )
+            lbl.grid(column = 0,row = 0)
+            self.popWidgets['lbl']=lbl
+            
+            text=tk.scrolledtext.ScrolledText(pop,
+                                      wrap = tk.WORD,
+                                      width = 80,
+                                      height = hght,
+                                      bg="black",
+                                      fg="green",
+                                      font = ("Terminal", 10),
+                                      )
+            text.grid(column = 0, pady = 10, padx = 10)
+            self.popWidgets['text']=text        
+            self.consoleOpen=True
+        
+    def onConsoleClose(self):
+        if(self.locked):
+            print("not closing console; it is locked")
+        else:
+            print("console closing...")
+            self.consoleOpen=False
+            self.popWidgets['pop'].destroy();
+            self.popWidgets.clear()
+        
+    def waitConsole(self):
+        if(self.locked):
+            print("not waiting on console to close; it is locked")
+            return        
+        while(self.consoleOpen):
+            pass
+        self.enableAll()
         
     def setAdup(self, adup):    
         print("setting up ADUP callback")
         self._adup=adup
         self._adup.reg_callback(self.handler)
+        self._adup.regDebugCB(self.debugCB)
         
     def handler(self, msg):
         # msg is a msg_t object
@@ -76,7 +147,6 @@ class max78000_gui():
             fg="white",
             anchor="w",
             )
-        #lblImage.grid(column=0,row=0)#, columnspan=1)
         lblImage.pack()
         
         if(False):
@@ -112,7 +182,6 @@ class max78000_gui():
         img1=ImageTk.PhotoImage(im)        
    
         self.imgLblNative = tk.Label(frm, image=img1, borderwidth=1, relief="solid")
-        #self.imgLbl.grid(column=0, row=1)
         self.imgLblNative.pack()
         btn = tk.Button(
             master=frm,
@@ -143,7 +212,6 @@ class max78000_gui():
         img1=ImageTk.PhotoImage(im)        
    
         self.imgLblPatched = tk.Label(frm, image=img1, borderwidth=1, relief="solid")
-        #self.imgLbl.grid(column=0, row=1)
         self.imgLblPatched.pack()
         
         btn = tk.Button(
@@ -163,12 +231,6 @@ class max78000_gui():
             master=frm,
             borderwidth = 3,
             height=4,
-#             relief="groove",
-#             text="Adversarial Patching",
-#             width=40,
-#             bg="blue",
-#             fg="white",
-#             anchor="w",
         )
         lbl.pack(expand=True, fill='both')
         
@@ -190,8 +252,6 @@ class max78000_gui():
             relief="groove",
             text="Results",
             width=40,
-            #bg="blue",
-            #fg="white",
             anchor="w",
             )        
         lbl.pack()
@@ -202,8 +262,6 @@ class max78000_gui():
             relief="groove",
             text="[result text here]",
             width=40,
-            #bg="blue",
-            #fg="white",
             anchor="w",
             )        
         lbl.pack()
@@ -218,7 +276,6 @@ class max78000_gui():
             height = 3,
             command = self.btnExecute,
             )
-        #btnRun.grid(column=0, row=2)#, columnspan=1)
         btn.pack(expand=True, fill='both')
         self.buttons.append(btn)
         
@@ -233,7 +290,6 @@ class max78000_gui():
             fg="white",
             anchor="w",
             )
-        #lbl0.grid(column=0,row=0, columnspan=2)
         lbl.pack(expand=True, fill='both')
         
         lbl = tk.Label(
@@ -241,12 +297,8 @@ class max78000_gui():
             borderwidth = 3,
             relief="groove",
             text="Prompt",
-            #width=75,
-            #bg="blue",
-            #fg="white",
             anchor="w",
             )
-        #lbl1.grid(column=0, row=1)
         lbl.pack(expand=True, fill='both')
         #return
         lbl = tk.Label(
@@ -254,13 +306,8 @@ class max78000_gui():
             borderwidth = 3,
             relief="groove",
             text="[prompt text here]",
-            #width=75,
-            # height=3,
-            #bg="blue",
-            #fg="white",
             anchor="w",
             )
-        #lbl2.grid(column=1, row=1)
         lbl.pack(expand=True, fill='both')
         self.img_prompt=lbl
         
@@ -269,9 +316,6 @@ class max78000_gui():
             borderwidth = 3,
             relief="groove",
             text="Result",
-            #width=75,
-            #bg="blue",
-            #fg="white",
             anchor="w",
             )
         lbl.pack(expand=True, fill='both')
@@ -281,9 +325,6 @@ class max78000_gui():
             borderwidth = 3,
             relief="groove",
             text="[result text here]",
-            #width=75,
-            #bg="blue",
-            #fg="white",
             anchor="w",
             )
         lbl.pack(expand=True, fill='both')
@@ -299,7 +340,6 @@ class max78000_gui():
             height = 3,
             command = self.btnCapture,
             )
-        #btnRun.grid(column=0, row=2)#, columnspan=1)
         btn.pack(expand=True, fill='both')
         self.buttons.append(btn)
         
@@ -312,13 +352,12 @@ class max78000_gui():
             height = 3,
             command = self.btnClassify,
             )
-        #btnRun.grid(column=0, row=2)#, columnspan=1)
         btn.pack(expand=True, fill='both')
         self.buttons.append(btn)
         
         btn = tk.Button(
             master=frm,
-            text = "Transfer",
+            text = "Download",
             fg = "black",
             bg = "grey",
             width = 20,
@@ -347,9 +386,6 @@ class max78000_gui():
             borderwidth = 3,
             relief="groove",
             text="Prompt",
-            #width=75,
-            #bg="blue",
-            #fg="white",
             anchor="w",
             )
         lbl.pack(expand=True, fill='both')
@@ -359,9 +395,7 @@ class max78000_gui():
             borderwidth = 3,
             relief="groove",
             text="[prompt text here]",
-            #width=75,
-            #bg="blue",
-            #fg="white",
+
             anchor="w",
             )
         lbl.pack(expand=True, fill='both')
@@ -427,7 +461,7 @@ class max78000_gui():
             height = 3,
             command = self.btnApplyPatch,
             )
-        btn.pack(expand=True)#, fill='both')
+        btn.pack(expand=True)
         self.buttons.append(btn)
         
         btn = tk.Button(
@@ -439,19 +473,13 @@ class max78000_gui():
             height = 3,
             command = self.btnLoadPatch,
             )
-        btn.pack(expand=True)#, fill='both')
+        btn.pack(expand=True)
         self.buttons.append(btn)
         
         lbl = tk.Label(
             master=frm,
             borderwidth = 3,
             height=7,
-#             relief="groove",
-#             text="Adversarial Patching",
-#             width=40,
-#             bg="blue",
-#             fg="white",
-#             anchor="w",
             )
         lbl.pack(expand=True, fill='both')
     
@@ -466,12 +494,9 @@ class max78000_gui():
         
         self.makefrmBotL(botL)
         self.makefrmBotM(botM)
-        #self.makefrmBotR(botR)
-        
+
     
     def makeUI(self):
-        #self.win.geometry("320x200")
-        
         frmRoot = tk.Frame(master=self.win)
         self.frmRoot = frmRoot
         
@@ -481,12 +506,7 @@ class max78000_gui():
         frmR = tk.Frame(master=frmRoot)        
         frmL.pack(side=tk.LEFT)
         frmR.pack(side=tk.RIGHT)
-        
-#         frmTop = tk.Frame(master=frmRoot)
-#         frmBot = tk.Frame(master=frmRoot)
-#         frmTop.pack(side=tk.TOP)
-#         frmBot.pack(side=tk.BOTTOM)
-        
+
         frmTL = tk.Frame(master=frmL)
         frmBL = tk.Frame(master=frmL)
         frmTL.pack(side=tk.TOP)
@@ -498,93 +518,96 @@ class max78000_gui():
         self.makefrmTopL(frmTL)        
         self.makefrmBot(frmBot)
         self.makefrmR(frmR)
-        
-        #self.makefrmBotL(frmBL)
-#         self.makefrmBotR(frmBR)
-    
-    def oldmakeUI(self):
-        #self.win.geometry("320x200")
-        
-        frmRoot = tk.Frame(master=self.win)
-        frmRoot.pack()
-        
-        frmTop = tk.Frame(master=frmRoot)
-        frmBot = tk.Frame(master=frmRoot)
-        frmTop.pack(side=tk.TOP)
-        frmBot.pack(side=tk.BOTTOM)
-        
-        frmTL = tk.Frame(master=frmTop)
-        frmTR = tk.Frame(master=frmTop)               
-#         frmBL = tk.Frame(master=frmBot)
-#         frmBR = tk.Frame(master=frmBot)
-        
-        frmTL.pack(side=tk.LEFT)
-#         frmBL.pack(side=tk.LEFT)
-        frmTR.pack(side=tk.RIGHT)
-#         frmBR.pack(side=tk.RIGHT)
-        
-        self.makefrmTopL(frmTL)
-        self.makefrmTopR(frmTR)
-        self.makefrmBot(frmBot)
-        #self.makefrmBotL(frmBL)
-#         self.makefrmBotR(frmBR)
-    
-    def adupTransact(self, msg, name, exp):
-        self._adup.TX(self.CMSG)
-        ret = self._adup.RX()
-        if(ret.payload() == exp):
-            print(name+": transaction success")
+
+     
+    def debugCB(self, dstr):
+        if(self.consoleOpen):
+            text = self.popWidgets['text']
+            text.insert(tk.INSERT, dstr)
+            text.see("end")
         else:
-            print(name+": transaction fail -> "+ret.toString(ret.payload()))
-        return ret
-            
+            print("app debug: "+dstr, end='')        
+    
+    
     def btnExecute(self):
         # perform IMAGE then VOICE commands, all in a row
-        pass
-        
-    def btnCapture(self):
         self.disableAll()
+        self.lock()
+        self.createConsole(70)
+        threading.Thread(target=self.thrd_btnExecute).start()
+    
+    def thrd_btnExecute(self):        
+        self.thrd_btnCapture()
+        self.thrd_btnClassify()
+        #self.thrd_btnTransfer() # should we transfer by default?
+        self.thrd_btnVoiceDemo()
+        self.unlock()        
+        self.waitConsole()
+        
+        
+    def btnCapture(self):        
         threading.Thread(target=self.thrd_btnCapture).start()
         
-    def thrd_btnCapture(self):        
+    def thrd_btnCapture(self):
+        self.disableAll()
+        self.lock()
+        self.createConsole(30)
+        self.debugCB("Taking your picutre in ")
+        for i in range(3,0,-1):            
+            self.debugCB("{:d} ".format(i))
+            time.sleep(1)        
+        self.debugCB("\n*NOW*\n")
+        
         self.img_prompt.configure(text="...working...")
         self.img_prompt.text="...working..."
         self.CMSG.setPayload("0") # capture ues camera subcmd 0
-        self.adupTransact(self.CMSG, "capture", "OK")
+        self._adup.TX(self.CMSG)
+        ret = self._adup.RX() # OK response
         self.img_prompt.configure(text="Captured!")
         self.img_prompt.text="Captured!"
-        self.enableAll()
+        time.sleep(1)
+        self.unlock()
+        self.onConsoleClose()
+        self.waitConsole()
         
     
-    def btnClassify(self):
-        self.disableAll()
+    def btnClassify(self):        
         threading.Thread(target=self.thrd_btnClassify).start()
     
     def thrd_btnClassify(self):
+        self.disableAll()
+        self.lock()
+        self.createConsole(70)
         self.CMSG.setPayload("1") # subcmd for classify
-        self._adup.TX(self.CMSG)
-        ret = self._adup.RX()
         
+        self._adup.TX(self.CMSG)        
+        ret = self._adup.RX()
+
         self.RMSG.setPayload("0")
         self._adup.TX(self.RMSG)
         ret = self._adup.RX()
         print(ret.toString(ret.payload()))
         self.img_result.configure(text=ret.payload()+"%")
         self.img_result.text=ret.payload()+"%"
-        self.enableAll()
+        self.unlock()
+        self.waitConsole()
+
         
     def btnTransfer(self):
-        self.disableAll()
         threading.Thread(target=self.thrd_btnTransfer).start()
         
     def thrd_btnTransfer(self):
+        self.disableAll()
+        self.lock()
+        self.createConsole(30, "Downloading image...")
+        
         self.CMSG.setPayload("2") # subcmd for xfering image to PC is 3
         self._adup.TX(self.CMSG)
                 
         msg_numMsgs=self._adup.RX() # receive a msg indicating how many data msgs to accept
         numMsgs = int(msg_numMsgs.payload(), 16)
         print(msg_numMsgs.payload())
-        print("expecting "+str(numMsgs)+" messages of data...")
+        self.debugCB("Requesting image data\n")
         
         ret = MSG("full_image")
         ret.setCmd("C")
@@ -595,23 +618,16 @@ class max78000_gui():
             msgi = self._adup.TSOP()
             ret.appendPayload(msgi.payload())
             progress=progress+step
-            print(str(progress)+"%: RX'd ["+str(msgi.len())+"] hex chars")
-            
-           
-        print("received all msgs")
+            #print(str(progress)+"%: RX'd ["+str(msgi.len())+"] hex chars")
+            self.debugCB("{:.2f}%\n".format(progress))
+            #self.debugCB(str(progress)+"%\n")#: RX'd ["+str(msgi.len())+"] hex chars\n")
+
         print(ret.toString())
         
         dne = self._adup.RX() # capture a final DONE message        
-        print("RX'd camera data; converting to image")
+        self.debugCB("RX'd camera data; converting to image\n")
         
         ba = bytes.fromhex(ret.payload())
-        print("converted 32k hex into [" + str(len(ba)) + "] bytes")
-
-        #print("we were supposed to get " + str(4*128*128)+ " bytes!")
-        
-        # flush stdout
-        sys.stdout.flush()
-        
         rxdata = np.frombuffer(ba, dtype=np.int8)
 
         imgdata = np.delete(rxdata, np.arange(0, rxdata.size, 4))
@@ -633,60 +649,62 @@ class max78000_gui():
         im = self.imageFormat(im, True)
         self.updateGuiImage(im)
    
-        print("cam'd!")
+#         print("cam'd!")
+        self.unlock()
+        self.onConsoleClose()
         self.enableAll()
         
     def btnVoiceDemo(self):
-        self.disableAll()
         threading.Thread(target=self.thrd_btnVoiceDemo).start()
         
     def thrd_btnVoiceDemo(self):
+        self.disableAll()
+        self.lock()
+        self.createConsole(70)
+        self.debugCB("What do you prefer?\n\tDog\n\tLove\n\tDisk\n")
+        
         # perform full voice demo
         self.vce_prompt.configure(text="... listening ...")
         self.vce_prompt.text="... listening ..."
         
-        self.VMSG.setPayload("1")
+        self.VMSG.setPayload("{:x}".format(10))
         self._adup.TX(self.VMSG)
+        self.debugCB("sent voice cmd\n")
+        
         ret = self._adup.RX()
-        print(ret.toString(ret.payload()))        
+        self.debugCB("received ack: {:s}\n".format(ret.toString(ret.payload())))
+        
+        #self._adup.serDebug(2)
+        ret = self._adup.RX()
+        self.debugCB("voice recog done: {:s}\n".format(ret.toString(ret.payload())))
+        
         self.vce_prompt.configure(text="Done!")
         self.vce_prompt.text="Done!"
         
+        self.debugCB("fetching voice recog results\n")
         self.RMSG.setPayload("1")
         self._adup.TX(self.RMSG)
         ret = self._adup.RX()
         print(ret.toString(ret.payload()))
+        
         self.vce_result.configure(text=ret.payload())
         self.vce_result.text=ret.payload()
-        
-        self.enableAll()
+        self.debugCB("-----\nYour fate is sealed, please close the console\n-----\n")
+        self.unlock()        
+        self.waitConsole()
     
         
     def btnUploadNative(self):
-        self.disableAll()
         threading.Thread(target=self.thrd_btnUploadNative).start()
         # upload the locally stored native image to the board
         pass
     
-    def thrd_btnUploadNative(self):        
+    def uploadImage(self, img):
         maxMsgLen = (8*1024)
-        #self._adup.serDebug(2)
-        
-        # TODO: convert tmp_native.png to a byte array
-        # must be compliant with the original max78k format
-        # inject it into the below message as ASCII hex string using imgMsg.appendPayload(string)
-        # using this msg format for consistency, it could just as well be a string
-        
-        #todo where to set img_path
-        img_path = "default.png"
-        img = load_image(img_path)
-        
         imgbytes = img.tobytes()
         
         print(len(imgbytes))
         impay = binascii.hexlify(imgbytes).decode('utf-8')
-        
-        
         
         imgMsg = MSG("image_to_upload")
         
@@ -695,7 +713,7 @@ class max78000_gui():
         payload = imgMsg.payload() # get the payload string from above        
         numMsgs = imgMsg.len()//(maxMsgLen)
         
-        print("breaking img of ["+str(imgMsg.len())+"] hex ascii chars into ["+str(numMsgs)+"] msgs")
+        #print("breaking img of ["+str(imgMsg.len())+"] hex ascii chars into ["+str(numMsgs)+"] msgs")
         
         # send a msg to MCU indicating start of image upload and how many msgs it will require
         self.TMSG.setPayload("{:x}".format(numMsgs))
@@ -706,44 +724,78 @@ class max78000_gui():
         partialMsg = MSG("image_chunk")
         partialMsg.setCmd('T') # indicate that this is a transfer msg type
         
-        curMsgCnt=0
+        #curMsgCnt=0
+        step = 100/numMsgs
+        progress = 0
         for i in range(0, imgMsg.len(), maxMsgLen):
             
             # NOTE: this differs from the code used to transfer an imnage from MCU to PC
             # in THAT code I use POST() rather than TX()
             # here i'm using TX(), which adds protocol overhead but mitigates possible buffer overflows on the MCU
-            print("TX'ing msg ["+str(curMsgCnt)+"] of ["+str(numMsgs-1)+"]")
+            #print("TX'ing msg ["+str(curMsgCnt)+"] of ["+str(numMsgs-1)+"]")
             partialMsg.setPayload(payload[i:i+maxMsgLen])            
             self._adup.TX(partialMsg) # transfer this chunk
             ack = self._adup.RX()
-            curMsgCnt=curMsgCnt+1
-            print("\tRX'd ack for: "+ack.payload())
+            #curMsgCnt=curMsgCnt+1
+            #print("\tRX'd ack for: "+ack.payload())
+            progress+=step
+            self.debugCB("{:.2f}%\n".format(progress))
         
         #self._adup.serDebug(2)        
         dne = self._adup.RX()
         print(dne.toString(dne.payload()))
         print("data TX is done")
-        self.enableAll()
         
-    def btnUploadPatched(self):
+    def thrd_btnUploadNative(self):
         self.disableAll()
+        self.lock()        
+        self.createConsole(30, "Uploading image...")
+        img_path = "tmp_native.png"
+        img = load_image(img_path)
+        self.debugCB("uploading native image\n")        
+        self.uploadImage(img)        
+        self.unlock()
+        self.onConsoleClose()
+        self.waitConsole()
+        
+    def btnUploadPatched(self):      
         threading.Thread(target=self.thrd_btnUploadPatched).start()
         # upload patched image to the board
         pass
     
     def thrd_btnUploadPatched(self):
-        self.enableAll()
+        self.disableAll()
+        self.lock()        
+        self.createConsole(30, "Uploading image...")
+        img_path = "patched.png"
+        img = load_image(img_path)
+        self.debugCB("uploading patched image\n")        
+        self.uploadImage(img)        
+        self.unlock()
+        self.onConsoleClose()
+        self.waitConsole()
+
         
     def btnApplyPatch(self):
-        self.disableAll()
         threading.Thread(target=self.thrd_btnApplyPatch).start()
         # apply an adversarial patch to the native image, creating and updating the patched image
         pass
     
     def thrd_btnApplyPatch(self):
-        self.enableAll()
+        self.disableAll()
+        self.lock()        
+        self.createConsole(30, "Uploading image...")
+        # TODO: insert code to actually apply a patch to an image
+        self.unlock()
+        self.onConsoleClose()
+        self.waitConsole()
         
     def btnLoadPatch(self):
+        threading.Thread(target=self.thrd_btnLoadPatch).start()
+        return
+        # the following code was added perhasp from a misunderstanding of which function
+        # is meant to be used here
+        # leaving in place for now, should be purged once moved elsewhere
         self.disableAll()
         threading.Thread(target=self.thrd_btnApplyPatch).start()
         # load a patch file from disk to be applied later to captured images
@@ -758,7 +810,14 @@ class max78000_gui():
         pass
     
     def thrd_btnLoadPatch(self):
-        self.enableAll()
+        self.disableAll()
+        self.lock()        
+        #self.createConsole(30, "Loading a patch file...")
+        
+        # TODO: insert code to load patch from disk (pick from multiple patches)
+        self.unlock()
+        self.onConsoleClose()
+        self.waitConsole()
         
     def imageFormat(self, im, save):
         if(save):

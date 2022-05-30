@@ -27,6 +27,15 @@ void cmd_camera(msg_t *msg){
 	 * 1: classify existing image buffer
 	 * 2: transfer image buffer to pc
 	*/
+
+//	msg_t dmsg;
+//	char dbuf[]="This is a debug msg\n";
+//	dmsg.bsize=strlen(dbuf);
+//	dmsg.cmd='D';
+//	dmsg.len=dmsg.bsize;
+//	dmsg.buf=dbuf;
+
+
 	switch(msg->buf[0]){
 	case('0'):
 		// capture image data
@@ -38,6 +47,8 @@ void cmd_camera(msg_t *msg){
 	case('1'):
 		// classify current image buffer
 		image_processing_phase2();
+//		printf("transmitting a debug msg\n");
+//		adup->POST(&dmsg); // post a debug msg
 		strcpy(msg->buf, "OK");
 		msg->len = strlen(msg->buf);
 		printf("classified image\n");
@@ -59,10 +70,14 @@ void cmd_camera(msg_t *msg){
 
 void cmd_voice(msg_t *msg){
 	// payload indicates how many attempts to allow while checking for keyword match
-	int numTries = strtol(msg->buf, NULL, 10);
+	int numTries = strtol(msg->buf, NULL, 16);
+
+	sprintf(msg->buf, "will accept up to [%d] attempts to be recognized\n", numTries);
+	msg->len=strlen(msg->buf);
+	adup->TX(msg);
+
 	start_voice_recog(numTries);
-	sprintf(msg->buf, voiceResults);
-	msg->len = strlen(msg->buf);
+	msg->len=0;
 }
 
 void cmd_results(msg_t *msg){
