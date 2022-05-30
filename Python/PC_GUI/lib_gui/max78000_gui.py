@@ -670,6 +670,7 @@ class max78000_gui():
     
     def thrd_btnUploadNative(self):        
         maxMsgLen = (8*1024)
+        #self._adup.serDebug(2)
         
         # TODO: convert tmp_native.png to a byte array
         # must be compliant with the original max78k format
@@ -690,24 +691,34 @@ class max78000_gui():
         payload = imgMsg.payload() # get the payload string from above        
         numMsgs = imgMsg.len()//(maxMsgLen)
         
+        print("breaking img of ["+str(imgMsg.len())+"] hex ascii chars into ["+str(numMsgs)+"] msgs")
+        
         # send a msg to MCU indicating start of image upload and how many msgs it will require
-        self.TMSG.setPayload("{:x}".format(numMsgs)) 
+        self.TMSG.setPayload("{:x}".format(numMsgs))
+        self._adup.TX(self.TMSG)
+        ack = self._adup.RX()
         
         # iterate over the imgMsg payload, striding by 8KB on each iteration
         partialMsg = MSG("image_chunk")
         partialMsg.setCmd('T') # indicate that this is a transfer msg type
         
+        curMsgCnt=0
         for i in range(0, imgMsg.len(), maxMsgLen):
+            
             # NOTE: this differs from the code used to transfer an imnage from MCU to PC
             # in THAT code I use POST() rather than TX()
             # here i'm using TX(), which adds protocol overhead but mitigates possible buffer overflows on the MCU
+            print("TX'ing msg ["+str(curMsgCnt)+"] of ["+str(numMsgs-1)+"]")
             partialMsg.setPayload(payload[i:i+maxMsgLen])            
             self._adup.TX(partialMsg) # transfer this chunk
-                    
-        dne = MSG("indicates_xfer_done")
-        dne.setCmd('T')
-        dne.setPayload("OK")
-        self._adup.TX(dne) # send the final DONE msg        
+            ack = self._adup.RX()
+            curMsgCnt=curMsgCnt+1
+            print("\tRX'd ack for: "+ack.payload())
+        
+        #self._adup.serDebug(2)        
+        dne = self._adup.RX()
+        print(dne.toString(dne.payload()))
+        print("data TX is done")
         self.enableAll()
         
     def btnUploadPatched(self):

@@ -196,7 +196,7 @@ uint16_t c_uart_inst_uart_ovr_drain(uint8_t *const buf, uint32_t nbytes){
   
   // enable RX IRQ
   //	hUartDev->pUARTRegs->IEN |= (uint16_t)(BITM_UART_IEN_ERBFI);
-  if(true){
+  if(false){
 	  printf("drained [%d] bytes from ADUP circular buffer\n", bytesToReturn);
   }
   return bytesToReturn;
