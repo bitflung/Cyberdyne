@@ -8,6 +8,8 @@ import PIL
 from PIL import ImageTk, Image
 
 from lib_comms.lib_ADUP import *
+from patch import load_image
+import binascii
 
 #from .pump_ctrl import *
 #import hashlib
@@ -673,10 +675,20 @@ class max78000_gui():
         # must be compliant with the original max78k format
         # inject it into the below message as ASCII hex string using imgMsg.appendPayload(string)
         # using this msg format for consistency, it could just as well be a string
+        
+        #todo where to set img_path
+        img_path = "default.png"
+        img = load_image(img_path)
+        
+        imgbytes = img.tobytes()
+        impay = binascii.hexlify(imgbytes).decode('utf-8')
+        
         imgMsg = MSG("image_to_upload")
         
+        imgMsg.appendPayload(impay)
+        
         payload = imgMsg.payload() # get the payload string from above        
-        numMsgs = imgMsg.len()/(maxMsgLen)
+        numMsgs = imgMsg.len()//(maxMsgLen)
         
         # send a msg to MCU indicating start of image upload and how many msgs it will require
         self.TMSG.setPayload("{:x}".format(numMsgs)) 
@@ -720,6 +732,14 @@ class max78000_gui():
         self.disableAll()
         threading.Thread(target=self.thrd_btnApplyPatch).start()
         # load a patch file from disk to be applied later to captured images
+        img_path = "robotpatch.png"
+        patch = load_image(img_path)
+        
+        imgbytes = patch.tobytes()
+        impay = binascii.hexlify(imgbytes).decode('utf-8')
+        
+        #impay is an ascii hex formated string that can be appended as a payload
+        
         pass
     
     def thrd_btnLoadPatch(self):
