@@ -630,6 +630,7 @@ class max78000_gui():
         ba = bytes.fromhex(ret.payload())
         rxdata = np.frombuffer(ba, dtype=np.int8)
 
+        #remove extra byte 32 bit to 24 bit rgb
         imgdata = np.delete(rxdata, np.arange(0, rxdata.size, 4))
         #change the two lines below where it has 128//4 to 128 when we fix the issue with sending all the data
         #imgdata = np.reshape(imgdata,(3,128,128))
@@ -703,7 +704,7 @@ class max78000_gui():
         maxMsgLen = (8*1024)
         imgbytes = img.tobytes()
         
-        print(len(imgbytes))
+        #print(len(imgbytes))
         impay = binascii.hexlify(imgbytes).decode('utf-8')
         
         imgMsg = MSG("image_to_upload")
