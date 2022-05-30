@@ -18,6 +18,7 @@ extern void ascii_capture(uint8_t *buf, int *sz);
 
 extern char *imageResults;//[40];
 extern char *voiceResults;
+extern char *decisionResults;
 
 //static uint8_t cam_data[128*128];
 
@@ -96,6 +97,10 @@ void cmd_results(msg_t *msg){
 		break;
 	case('1'):
 		sprintf(msg->buf, voiceResults);
+		msg->len = strlen(msg->buf);
+		break;
+	case('2'):
+		sprintf(msg->buf, decisionResults);
 		msg->len = strlen(msg->buf);
 		break;
 	default:

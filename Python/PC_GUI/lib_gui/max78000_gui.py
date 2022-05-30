@@ -541,6 +541,14 @@ class max78000_gui():
         self.thrd_btnClassify()
         #self.thrd_btnTransfer() # should we transfer by default?
         self.thrd_btnVoiceDemo()
+        
+        # fetch final results and pupulate the GUI
+        self.RMSG.setPayload("2")
+        self._adup.TX(self.RMSG)
+        res = self._adup.RX()        
+        self.lblResults.configure(text=res.payload())
+        self.lblResults.text=res.payload()
+        
         self.unlock()        
         self.waitConsole()
         
