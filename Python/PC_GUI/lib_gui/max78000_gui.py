@@ -682,7 +682,11 @@ class max78000_gui():
         img = load_image(img_path)
         
         imgbytes = img.tobytes()
+        
+        print(len(imgbytes))
         impay = binascii.hexlify(imgbytes).decode('utf-8')
+        
+        
         
         imgMsg = MSG("image_to_upload")
         
