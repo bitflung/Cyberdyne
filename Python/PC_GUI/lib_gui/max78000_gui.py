@@ -81,7 +81,7 @@ class max78000_gui():
             
             pop=tk.Toplevel(self.win)
             pop.protocol("WM_DELETE_WINDOW", self.onConsoleClose)
-            
+            pop.geometry("+1000+20")
             pop.title("Console")
             pop.config(bg="white")
             self.popWidgets['pop']=pop
@@ -541,6 +541,14 @@ class max78000_gui():
         self.thrd_btnClassify()
         #self.thrd_btnTransfer() # should we transfer by default?
         self.thrd_btnVoiceDemo()
+        
+        # fetch final results and pupulate the GUI
+        self.RMSG.setPayload("2")
+        self._adup.TX(self.RMSG)
+        res = self._adup.RX()        
+        self.lblResults.configure(text=res.payload())
+        self.lblResults.text=res.payload()
+        
         self.unlock()        
         self.waitConsole()
         
@@ -703,12 +711,12 @@ class max78000_gui():
         maxMsgLen = (8*1024)
         imgbytes = img.tobytes()
         
-        print(len(imgbytes))
+        self.debugCB("Uploading an image of [{:d} d] bytes\n".format(len(imgbytes)))
         impay = binascii.hexlify(imgbytes).decode('utf-8')
         
-        imgMsg = MSG("image_to_upload")
-        
+        imgMsg = MSG("image_to_upload")        
         imgMsg.appendPayload(impay)
+        self.debugCB("ascii hex payload = [{:d} d] bytes\n".format(imgMsg.len()))
         
         payload = imgMsg.payload() # get the payload string from above        
         numMsgs = imgMsg.len()//(maxMsgLen)
@@ -871,7 +879,14 @@ class max78000_gui():
         self.txtTermOutput.insert(tk.INSERT, txt+"\n")
         self.txtTermOutput.see(tk.END)
        
+    def systemExit(self):
+        self.win.destroy()
+        quit()
+        #sys.exit(0)
+        
     def setup(self):
+        self.win.geometry('+20+20')
+        self.win.protocol("WM_DELETE_WINDOW", self.systemExit)
         self.makeUI()
 
     def looper(self):

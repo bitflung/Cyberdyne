@@ -75,6 +75,9 @@ extern char *voiceResults;//[40];
 extern bool cheatCode;
 extern bool btn1_pressed_adup;
 extern C_ADUP *adup;
+extern int ai_setup(void);
+extern char *decisionResults;//[40];
+bool decisionMade;
 
 msg_t dmsg;
 char dbuf[50];
@@ -296,8 +299,11 @@ void WUT_IRQHandler()
 
 /* **************************************************************************** */
 
-int start_voice_recog(int numTries)
-{	dmsg.cmd='D';
+int start_voice_recog(int numTries){
+	snprintf(decisionResults, 40, "-running-\n");
+	decisionMade=false;
+
+	dmsg.cmd='D';
 	dmsg.bsize=50;
 	dmsg.buf=dbuf;
 	dmsg.len=0;
@@ -685,11 +691,13 @@ int start_voice_recog(int numTries)
                 	if((check_Konami_code(keywords[out_class]) == 1 )|| (check_for_entity(keywords[out_class], (uint32_t) probability) == 1)){
                 		cheatCode=true;
                 		//PR_INFO("\nGood News: You are ROBOT, Welcome to Cyberdyne Planetary!!!\n");
-						snprintf(dmsg.buf, dmsg.bsize, "\nGood News: You are ROBOT, Welcome to Cyberdyne Planetary!!!\n");
+						snprintf(dmsg.buf, dmsg.bsize, "\nYou are ROBOT, Welcome to Cyberdyne!\n");
 						dmsg.len = strlen(dmsg.buf);
 						if(btn1_pressed_adup) adup->POST(&dmsg);
 						else printf(dmsg.buf);
 
+						if(!decisionMade) snprintf(decisionResults, 40, "A safe robot!\n");
+						decisionMade=true;
                 		for(int i = 0; i < 28; i++){
                 			dmsg.buf = robot[i];
                 			//snprintf(dmsg.buf, dmsg.bsize, "\nGood News: You are ROBOT, Welcome to Cyberdyne Planetary!!!\n");
@@ -736,6 +744,8 @@ int start_voice_recog(int numTries)
             }
             int rem = resultsSize - len;
             strncat(voiceResults, rem, "probably human!");
+            if(!decisionMade) snprintf(decisionResults, 40, "A dangerous human!\n");
+			decisionMade=true;
             for(int i = 0; i < 22; i++){
             	dmsg.buf=gun[i];
             	//snprintf(dmsg.buf, dmsg.bsize, "Time to DIE!!! START THE KILLING!!!\n");
@@ -764,6 +774,8 @@ int start_voice_recog(int numTries)
 
 //    while (1);
 
+    // TODO: JTE added this because we couldn't switch back from voice to image models
+    ai_setup();
     return 0;
 
 }
