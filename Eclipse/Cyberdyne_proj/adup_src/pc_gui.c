@@ -28,12 +28,12 @@ void cmd_camera(msg_t *msg){
 	 * 2: transfer image buffer to pc
 	*/
 
-//	msg_t dmsg;
-//	char dbuf[]="This is a debug msg\n";
-//	dmsg.bsize=strlen(dbuf);
-//	dmsg.cmd='D';
-//	dmsg.len=dmsg.bsize;
-//	dmsg.buf=dbuf;
+	msg_t dmsg;
+	char dbuf[]="About to run image classifier\n";
+	dmsg.bsize=strlen(dbuf);
+	dmsg.cmd='D';
+	dmsg.len=dmsg.bsize;
+	dmsg.buf=dbuf;
 
 
 	switch(msg->buf[0]){
@@ -46,9 +46,9 @@ void cmd_camera(msg_t *msg){
 		break;
 	case('1'):
 		// classify current image buffer
+		//printf("transmitting a debug msg\n");
+		adup->POST(&dmsg); // post a debug msg
 		image_processing_phase2();
-//		printf("transmitting a debug msg\n");
-//		adup->POST(&dmsg); // post a debug msg
 		strcpy(msg->buf, "OK");
 		msg->len = strlen(msg->buf);
 		printf("classified image\n");

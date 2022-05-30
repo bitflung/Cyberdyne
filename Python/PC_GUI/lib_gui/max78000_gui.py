@@ -703,12 +703,12 @@ class max78000_gui():
         maxMsgLen = (8*1024)
         imgbytes = img.tobytes()
         
-        print(len(imgbytes))
+        self.debugCB("Uploading an image of [{:d} d] bytes\n".format(len(imgbytes)))
         impay = binascii.hexlify(imgbytes).decode('utf-8')
         
-        imgMsg = MSG("image_to_upload")
-        
+        imgMsg = MSG("image_to_upload")        
         imgMsg.appendPayload(impay)
+        self.debugCB("ascii hex payload = [{:d} d] bytes\n".format(imgMsg.len()))
         
         payload = imgMsg.payload() # get the payload string from above        
         numMsgs = imgMsg.len()//(maxMsgLen)
