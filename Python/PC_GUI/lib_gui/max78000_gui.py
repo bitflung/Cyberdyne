@@ -81,7 +81,7 @@ class max78000_gui():
             
             pop=tk.Toplevel(self.win)
             pop.protocol("WM_DELETE_WINDOW", self.onConsoleClose)
-            
+            pop.geometry("+1000+20")
             pop.title("Console")
             pop.config(bg="white")
             self.popWidgets['pop']=pop
@@ -879,7 +879,14 @@ class max78000_gui():
         self.txtTermOutput.insert(tk.INSERT, txt+"\n")
         self.txtTermOutput.see(tk.END)
        
+    def systemExit(self):
+        self.win.destroy()
+        quit()
+        #sys.exit(0)
+        
     def setup(self):
+        self.win.geometry('+20+20')
+        self.win.protocol("WM_DELETE_WINDOW", self.systemExit)
         self.makeUI()
 
     def looper(self):
