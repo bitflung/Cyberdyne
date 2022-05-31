@@ -770,7 +770,12 @@ class max78000_gui():
         imgbytes = img.tobytes()
         
         self.debugCB("uploading native image\n")        
-        self.uploadImage(imgbytes)        
+        self.uploadImage(imgbytes)
+        
+        scaled = PIL.Image.open(img_path)
+        scaledim = self.imageFormat(scaled, False)
+        self.updateGuiImage(scaledim)
+        
         self.unlock()
         self.onConsoleClose()
         self.waitConsole()
@@ -789,7 +794,12 @@ class max78000_gui():
         imgbytes = img.tobytes()
         
         self.debugCB("uploading patched image\n")        
-        self.uploadImage(imgbytes)        
+        self.uploadImage(imgbytes)
+        
+        scaled = PIL.Image.open(img_path)
+        scaledim = self.imageFormat(scaled, False)
+        self.updateGuiImage(scaledim)
+        
         self.unlock()
         self.onConsoleClose()
         self.waitConsole()
@@ -816,9 +826,6 @@ class max78000_gui():
         img3=ImageTk.PhotoImage(im) 
         self.imgLblPatched.configure(image=img3)
         self.imgLblPatched.image=img3
-        
-        #self.updateGuiImage()
-        
         
         self.debugCB("patched\n")
         self.unlock()
@@ -861,21 +868,23 @@ class max78000_gui():
             
         return im
             
-    def updateGuiImage(self, im):
+    def updateGuiImage(self, im, updateNative=True, updatePatched=True):
         img1=ImageTk.PhotoImage(im)        
         #img2=ImageTk.PhotoImage(Image.open("tmp.png"))        
         self.imgLbl.configure(image=img1)
         self.imgLbl.image=img1
         
-        im = Image.open("tmp_native.png")
-        img2=ImageTk.PhotoImage(im) 
-        self.imgLblNative.configure(image=img2)
-        self.imgLblNative.image=img2
+        if(updateNative):
+            im = Image.open("tmp_native.png")
+            img2=ImageTk.PhotoImage(im) 
+            self.imgLblNative.configure(image=img2)
+            self.imgLblNative.image=img2
         
-        im = Image.open("tmp_patched.png")
-        img3=ImageTk.PhotoImage(im) 
-        self.imgLblPatched.configure(image=img3)
-        self.imgLblPatched.image=img3
+        if(updatePatched):
+            im = Image.open("tmp_patched.png")
+            img3=ImageTk.PhotoImage(im) 
+            self.imgLblPatched.configure(image=img3)
+            self.imgLblPatched.image=img3
 
        
     def systemExit(self):
