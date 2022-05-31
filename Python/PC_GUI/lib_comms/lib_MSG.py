@@ -16,7 +16,7 @@ class MSG():
         
     def setPayload(self, str):
         if self._bsize < len(str):
-            print("ERROR: cur payload ["+str(self._len)+"] exceeds max size ["+str(self._bsize)+"]; ignoring")
+            print("ERROR: cur payload [{:s}] exceeds max size [{:s}]; ignoring".format(str(self._len), str(self._bsize)))
         else:
             self._buf = str
             self._len = len(self._buf)

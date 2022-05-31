@@ -629,8 +629,8 @@ class max78000_gui():
             #print(str(progress)+"%: RX'd ["+str(msgi.len())+"] hex chars")
             self.debugCB("{:.2f}%\n".format(progress))
             #self.debugCB(str(progress)+"%\n")#: RX'd ["+str(msgi.len())+"] hex chars\n")
-
-        print(ret.toString())
+        
+        self.debugCB(ret.toString("Downloaded image stats")+"\n")
         
         dne = self._adup.RX() # capture a final DONE message        
         self.debugCB("RX'd camera data; converting to image\n")
@@ -652,15 +652,50 @@ class max78000_gui():
         imgdata_unsigned[:,:,0] = imgdata_unsigned[:,:,2]
         imgdata_unsigned[:,:,2] = imgdata_tmp[:,:,0]
 
-        im=Image.fromarray(imgdata_unsigned.astype('uint8'),'RGB')
-        
+        im=Image.fromarray(imgdata_unsigned.astype('uint8'),'RGB')        
         im = self.imageFormat(im, True)
         self.updateGuiImage(im)
-   
-#         print("cam'd!")
+        
+        #self.debugCB("uploading [{:d}] byte img bytearray\n".format(len(ba)))        
+        #self.uploadImage(ba)
+        ##############################################
+        # testing a flow to just upload data from RET again
+        self.TMSG.setPayload("{:x}".format(numMsgs))
+        self._adup.TX(self.TMSG)
+        ack = self._adup.RX()
+        maxMsgLen = (8*1024)
+        payload = ret.payload()
+        
+        # iterate over the imgMsg payload, striding by 8KB on each iteration
+        partialMsg = MSG("image_chunk")
+        partialMsg.setCmd('T') # indicate that this is a transfer msg type
+        
+        #curMsgCnt=0
+        step = 100/numMsgs
+        progress = 0
+        for i in range(0, ret.len(), maxMsgLen):
+            
+            # NOTE: this differs from the code used to transfer an imnage from MCU to PC
+            # in THAT code I use POST() rather than TX()
+            # here i'm using TX(), which adds protocol overhead but mitigates possible buffer overflows on the MCU
+            #print("TX'ing msg ["+str(curMsgCnt)+"] of ["+str(numMsgs-1)+"]")
+            partialMsg.setPayload(payload[i:i+maxMsgLen])            
+            self._adup.TX(partialMsg) # transfer this chunk
+            ack = self._adup.RX()
+            #curMsgCnt=curMsgCnt+1
+            #print("\tRX'd ack for: "+ack.payload())
+            progress+=step
+            self.debugCB("{:.2f}%\n".format(progress))
+        
+        #self._adup.serDebug(2)        
+        dne = self._adup.RX()
+        ####################################################
+        
+
         self.unlock()
-        self.onConsoleClose()
-        self.enableAll()
+        self.debugCB("close the window\n")
+        #self.onConsoleClose()
+        self.waitConsole()
         
     def btnVoiceDemo(self):
         threading.Thread(target=self.thrd_btnVoiceDemo).start()
@@ -707,16 +742,19 @@ class max78000_gui():
         # upload the locally stored native image to the board
         pass
     
-    def uploadImage(self, img):
+    def uploadImage(self, imgbytes):
         maxMsgLen = (8*1024)
-        imgbytes = img.tobytes()
         
         self.debugCB("Uploading an image of [{:d} d] bytes\n".format(len(imgbytes)))
         impay = binascii.hexlify(imgbytes).decode('utf-8')
         
         imgMsg = MSG("image_to_upload")        
-        imgMsg.appendPayload(impay)
+        imgMsg.setPayload(impay)
         self.debugCB("ascii hex payload = [{:d} d] bytes\n".format(imgMsg.len()))
+        self.debugCB("first 8 words of hex ascii bytes:\n")
+        for i in range(0, 8*8, 8):
+            self.debugCB("\t"+impay[i:i+8]+"\n")
+                     
         
         payload = imgMsg.payload() # get the payload string from above        
         numMsgs = imgMsg.len()//(maxMsgLen)
@@ -760,8 +798,10 @@ class max78000_gui():
         self.createConsole(30, "Uploading image...")
         img_path = "tmp_native.png"
         img = load_image(img_path)
+        imgbytes = img.tobytes()
+        
         self.debugCB("uploading native image\n")        
-        self.uploadImage(img)        
+        self.uploadImage(imgbytes)        
         self.unlock()
         self.onConsoleClose()
         self.waitConsole()
@@ -777,8 +817,10 @@ class max78000_gui():
         self.createConsole(30, "Uploading image...")
         img_path = "patched.png"
         img = load_image(img_path)
+        imgbytes = img.tobytes()
+        
         self.debugCB("uploading patched image\n")        
-        self.uploadImage(img)        
+        self.uploadImage(imgbytes)        
         self.unlock()
         self.onConsoleClose()
         self.waitConsole()
@@ -863,23 +905,11 @@ class max78000_gui():
         img3=ImageTk.PhotoImage(im) 
         self.imgLblPatched.configure(image=img3)
         self.imgLblPatched.image=img3
-        
-        
-    
-        
-    
-    def termOutputUpdate(self, txt):
-        #self.txtTermOutput.delete("1.0", tk.END)
-        # text_widget.get('1.0', 'end-1c')
-        length = len(self.txtTermOutput.get("1.0", tk.END))
-        if length > 1024*10:
-            self.txtTermOutput.delete("1.0", "5.0")            
-            #self.txtTermOutput.insert(tk.INSERT, "...trimmed..."+"\n")
-        
-        self.txtTermOutput.insert(tk.INSERT, txt+"\n")
-        self.txtTermOutput.see(tk.END)
+
        
     def systemExit(self):
+        print("exiting gracefully")
+        self._adup.serClose()
         self.win.destroy()
         quit()
         #sys.exit(0)

@@ -120,6 +120,8 @@ void cmd_transfer(msg_t *msg){
 	msg->len=0;
 	printf("expecting [%d] msgs\n", numMsgs);
 	adup->TX(msg); // PC will wait for a response here so we don't overwrite the numMsgs payload; we fire back the same msg
+	char tmp[9];
+	tmp[8]='\0';
 
 	// NOTE: we assume msgs are sent as an integer number of words (32-bit, as 8 char ascii hex vals)
 	uint32_t *dest = getCamData(); // pointer to image data array
@@ -130,8 +132,17 @@ void cmd_transfer(msg_t *msg){
 		printf("RX'd img msg [%d] of [%d]\n", i, numMsgs-1);
 		for(int j=0; j<msg->len; j+=8){
 			// striding by 8 on each iteration for 8 chars -> 4 bytes of data
-			val = strtol(&msg->buf[j], msg->buf[j+8], 16);
+			for(int k=0; k<8; k++){
+				tmp[k]=msg->buf[j+k];
+			}
+
+			val = strtol(tmp, NULL, 16);//&msg->buf[j], msg->buf[j+8], 16);
 			dest[idx]=val;
+
+			if(idx < 4){
+				printf("word [%d]: tmp=[%s] val=[%08X] dest[%d]=[%08X]\n", idx, tmp, val, idx, dest[idx]);
+			}
+
 			idx++;
 		}
 		sprintf(msg->buf, "%d", i);
