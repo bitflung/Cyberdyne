@@ -784,7 +784,7 @@ class max78000_gui():
         self.disableAll()
         self.lock()        
         self.createConsole(30, "Uploading image...")
-        img_path = "patched.png"
+        img_path = "tmp_patched.png"
         img = load_image(img_path)
         imgbytes = img.tobytes()
         
