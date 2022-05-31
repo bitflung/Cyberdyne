@@ -17,8 +17,8 @@ def mask_generation(mask_type='rectangle', patch=None, image_size=(3, 224, 224))
     mask[mask != 0] = 1.0
     return applied_patch, mask, x_location, y_location
     
-def insert_patch():
-    perturbated_image = torch.mul(mask.type(torch.FloatTensor), applied_patch.type(torch.FloatTensor)) + torch.mul((1-mask.type(torch.FloatTensor)), image.type(torch.FloatTensor))
+def insert_patch(mask,applied_patch,image):
+    perturbated_image = np.mul(mask.astype(np.uint8), applied_patch.astype(np.uint8)) + np.mul((1-mask.astype(np.uint8)), image.astype(np.uint8))
     return perturbated_image
 
 #returns image or patch as numpy array
@@ -26,14 +26,21 @@ def load_image(patch_file_path):
     #print("Loading patch file " + patch_file_path)
     im = Image.open(patch_file_path)
     rgb_im = im.convert('RGB')
-    pilarr = np.array(rgb_im)
+    pilarr = np.array(rgb_im,dtype=np.uint8)
+    #pdb.set_trace()
     imheight = np.shape(pilarr)[0]
     imwidth = np.shape(pilarr)[1]
+    imgconvert = pilarr.astype(np.int16)
+    imgconvert -= 128
     #pilarr=np.moveaxis(pilarr,2,0)
-    imgformatted = np.zeros((imheight,imwidth,4),dtype=np.int8)
-    imgformatted[:,:,0] = pilarr[:,:,2]
-    imgformatted[:,:,1] = pilarr[:,:,1]
-    imgformatted[:,:,2] = pilarr[:,:,0]
+    imgformatted = np.zeros((imheight,imwidth,4),dtype=np.int16)
+    imgformatted[:,:,0] = imgconvert[:,:,2]
+    imgformatted[:,:,1] = imgconvert[:,:,1]
+    imgformatted[:,:,2] = imgconvert[:,:,0]
+    
+    
+    
+    img8bit = imgformatted.astype(np.uint8)
     
     # padding = np.zeros((imheight*imwidth))
     #imgflat = np.ravel(pilarr)
@@ -48,4 +55,4 @@ def load_image(patch_file_path):
 
 
     #debug #save_patch(patch,patch_file_path+"debug.png")
-    return imgformatted
+    return img8bit
