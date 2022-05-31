@@ -34,10 +34,13 @@ def load_image(patch_file_path):
     imgconvert -= 128
     #pilarr=np.moveaxis(pilarr,2,0)
     imgformatted = np.zeros((imheight,imwidth,4),dtype=np.int16)
-    imgformatted[:,:,0] = imgconvert[:,:,2]
-    imgformatted[:,:,1] = imgconvert[:,:,1]
-    imgformatted[:,:,2] = imgconvert[:,:,0]
+#     imgformatted[:,:,0] = imgconvert[:,:,2]
+#     imgformatted[:,:,1] = imgconvert[:,:,1]
+#     imgformatted[:,:,2] = imgconvert[:,:,0]
     
+    imgformatted[:,:,1] = imgconvert[:,:,2]
+    imgformatted[:,:,2] = imgconvert[:,:,1]
+    imgformatted[:,:,3] = imgconvert[:,:,0]
     
     
     img8bit = imgformatted.astype(np.uint8)

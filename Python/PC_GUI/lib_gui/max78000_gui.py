@@ -113,10 +113,14 @@ class max78000_gui():
         if(self.locked):
             print("not closing console; it is locked")
         else:
-            print("console closing...")
-            self.consoleOpen=False
-            self.popWidgets['pop'].destroy();
-            self.popWidgets.clear()
+            if(len(self.popWidgets)>0):
+                print("console closing...")            
+                self.consoleOpen=False
+                self.popWidgets['pop'].destroy();
+                self.popWidgets.clear()
+            else:
+                print("console not open; nothing to close")
+                
         
     def waitConsole(self):
         if(self.locked):
@@ -656,45 +660,10 @@ class max78000_gui():
         im = self.imageFormat(im, True)
         self.updateGuiImage(im)
         
-        #self.debugCB("uploading [{:d}] byte img bytearray\n".format(len(ba)))        
-        #self.uploadImage(ba)
-        ##############################################
-        # testing a flow to just upload data from RET again
-        self.TMSG.setPayload("{:x}".format(numMsgs))
-        self._adup.TX(self.TMSG)
-        ack = self._adup.RX()
-        maxMsgLen = (8*1024)
-        payload = ret.payload()
         
-        # iterate over the imgMsg payload, striding by 8KB on each iteration
-        partialMsg = MSG("image_chunk")
-        partialMsg.setCmd('T') # indicate that this is a transfer msg type
-        
-        #curMsgCnt=0
-        step = 100/numMsgs
-        progress = 0
-        for i in range(0, ret.len(), maxMsgLen):
-            
-            # NOTE: this differs from the code used to transfer an imnage from MCU to PC
-            # in THAT code I use POST() rather than TX()
-            # here i'm using TX(), which adds protocol overhead but mitigates possible buffer overflows on the MCU
-            #print("TX'ing msg ["+str(curMsgCnt)+"] of ["+str(numMsgs-1)+"]")
-            partialMsg.setPayload(payload[i:i+maxMsgLen])            
-            self._adup.TX(partialMsg) # transfer this chunk
-            ack = self._adup.RX()
-            #curMsgCnt=curMsgCnt+1
-            #print("\tRX'd ack for: "+ack.payload())
-            progress+=step
-            self.debugCB("{:.2f}%\n".format(progress))
-        
-        #self._adup.serDebug(2)        
-        dne = self._adup.RX()
-        ####################################################
-        
-
         self.unlock()
-        self.debugCB("close the window\n")
-        #self.onConsoleClose()
+        #self.debugCB("close the window\n")
+        self.onConsoleClose()
         self.waitConsole()
         
     def btnVoiceDemo(self):
@@ -751,9 +720,9 @@ class max78000_gui():
         imgMsg = MSG("image_to_upload")        
         imgMsg.setPayload(impay)
         self.debugCB("ascii hex payload = [{:d} d] bytes\n".format(imgMsg.len()))
-        self.debugCB("first 8 words of hex ascii bytes:\n")
-        for i in range(0, 8*8, 8):
-            self.debugCB("\t"+impay[i:i+8]+"\n")
+#         self.debugCB("first 8 words of hex ascii bytes:\n")
+#         for i in range(0, 8*8, 8):
+#             self.debugCB("\t"+impay[i:i+8]+"\n")
                      
         
         payload = imgMsg.payload() # get the payload string from above        
@@ -834,10 +803,29 @@ class max78000_gui():
     def thrd_btnApplyPatch(self):
         self.disableAll()
         self.lock()        
-        self.createConsole(30, "Uploading image...")
+        self.createConsole(30, "Applying a patch...")
         # TODO: insert code to actually apply a patch to an image
+        
+        # load the native image
+        img_path = "tmp_native.png"
+        img = load_image(img_path)
+        imgbytes = img.tobytes()
+        
+        # load the patchfile        
+        #patch_path = "catsdogs_quantized.png"
+        patch_path = "robotpatch.png"
+        print("loading patch: {:s}".format(patch_path))
+        patch = load_image(patch_path)
+        #patch = Image.open(patch_path)
+        
+        # generate a mask
+        mask = mask_generation(mask_type='rectangle', patch=patch, image_size=(3, 128, 128))
+        
+        
+        
+        self.debugCB("this button doesn't do anything yet\nplease close the console\n")
         self.unlock()
-        self.onConsoleClose()
+        #self.onConsoleClose()
         self.waitConsole()
         
     def btnLoadPatch(self):
@@ -862,11 +850,11 @@ class max78000_gui():
     def thrd_btnLoadPatch(self):
         self.disableAll()
         self.lock()        
-        #self.createConsole(30, "Loading a patch file...")
-        
+        self.createConsole(30, "Loading a patch file...")
+        self.debugCB("this button doesn't do anything yet\nplease close the console\n")
         # TODO: insert code to load patch from disk (pick from multiple patches)
         self.unlock()
-        self.onConsoleClose()
+        #self.onConsoleClose()
         self.waitConsole()
         
     def imageFormat(self, im, save):
