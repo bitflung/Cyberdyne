@@ -10,9 +10,11 @@ Firmware dev getting started
 - Click the big hammer icon at top left to build the project
 - Expectations: build success
 
-
-Firmware Status
-- Initial check-in builds a binary using only the code Saurabh shared
-- ADUP source exists in the project and is built, but not yet linked because I haven't integrated it yet
-
-
+Status
+- Functional GUI
+- Adversarial patching
+- Trained image classifier (robot/human)
+- Trained voice classifier (dog, love, disk)
+- Upload images to board
+- Download images from board
+- 
