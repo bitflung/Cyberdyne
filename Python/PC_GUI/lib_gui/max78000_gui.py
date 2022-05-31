@@ -8,7 +8,7 @@ import PIL
 from PIL import ImageTk, Image
 
 from lib_comms.lib_ADUP import *
-from patch import load_image
+from patch import *
 import binascii
 
 #from .pump_ctrl import *
@@ -477,7 +477,7 @@ class max78000_gui():
             height = 3,
             command = self.btnLoadPatch,
             )
-        btn.pack(expand=True)
+        #btn.pack(expand=True)
         self.buttons.append(btn)
         
         lbl = tk.Label(
@@ -806,45 +806,27 @@ class max78000_gui():
         self.createConsole(30, "Applying a patch...")
         # TODO: insert code to actually apply a patch to an image
         
-        # load the native image
-        img_path = "tmp_native.png"
-        img = load_image(img_path)
-        imgbytes = img.tobytes()
+        hack("tmp_native.png", "robotpatch.png");
+#         
+#         im = make_patched_img("tmp_native.png", "robotpatch.png")
+#         
+#         imgfile=Image.fromarray(im.astype('uint8'),'RGB')
+#         imgfile.save("tmp_patched.png")
+        im = Image.open("tmp_patched.png")
+        img3=ImageTk.PhotoImage(im) 
+        self.imgLblPatched.configure(image=img3)
+        self.imgLblPatched.image=img3
         
-        # load the patchfile        
-        #patch_path = "catsdogs_quantized.png"
-        patch_path = "robotpatch.png"
-        print("loading patch: {:s}".format(patch_path))
-        patch = load_image(patch_path)
-        #patch = Image.open(patch_path)
-        
-        # generate a mask
-        mask = mask_generation(mask_type='rectangle', patch=patch, image_size=(3, 128, 128))
+        #self.updateGuiImage()
         
         
-        
-        self.debugCB("this button doesn't do anything yet\nplease close the console\n")
+        self.debugCB("patched\n")
         self.unlock()
-        #self.onConsoleClose()
+        self.onConsoleClose()
         self.waitConsole()
         
     def btnLoadPatch(self):
-        threading.Thread(target=self.thrd_btnLoadPatch).start()
-        return
-        # the following code was added perhasp from a misunderstanding of which function
-        # is meant to be used here
-        # leaving in place for now, should be purged once moved elsewhere
-        self.disableAll()
-        threading.Thread(target=self.thrd_btnApplyPatch).start()
-        # load a patch file from disk to be applied later to captured images
-        img_path = "robotpatch.png"
-        patch = load_image(img_path)
-        
-        imgbytes = patch.tobytes()
-        impay = binascii.hexlify(imgbytes).decode('utf-8')
-        
-        #impay is an ascii hex formated string that can be appended as a payload
-        
+        threading.Thread(target=self.thrd_btnLoadPatch).start()        
         pass
     
     def thrd_btnLoadPatch(self):
@@ -854,13 +836,14 @@ class max78000_gui():
         self.debugCB("this button doesn't do anything yet\nplease close the console\n")
         # TODO: insert code to load patch from disk (pick from multiple patches)
         self.unlock()
-        #self.onConsoleClose()
+        self.onConsoleClose()
         self.waitConsole()
         
     def imageFormat(self, im, save):
         if(save):
             im.save("tmp_native.png")
-        
+            im.save("tmp_patched.png")
+                           
         #im = Image.frombuffer('L', (128,128), ba, 'raw', 'L', 0, 1)
         
         ##### scale up by 2x #####
@@ -889,7 +872,7 @@ class max78000_gui():
         self.imgLblNative.configure(image=img2)
         self.imgLblNative.image=img2
         
-        im = Image.open("patched.png")
+        im = Image.open("tmp_patched.png")
         img3=ImageTk.PhotoImage(im) 
         self.imgLblPatched.configure(image=img3)
         self.imgLblPatched.image=img3
