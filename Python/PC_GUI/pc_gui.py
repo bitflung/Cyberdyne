@@ -21,6 +21,7 @@ class pc_gui():
         
     def portScanner(self):
         _adup = ADUP()
+        _adup.serDebug(2)
         useAutoBaud=True
         ports = _adup.getAllPorts() # gets all mbed ports
 #         ports = _adup.getMatchPorts("COM10") # gets ports with the given string in the name
@@ -92,20 +93,20 @@ ready = True
 gui.looper()
 
 
-def portScanner(_adup):
-    ports = _adup.getAllPorts() # gets all mbed ports
-    ports = _adup.getMatchPorts("COM10") # gets ports with the given string in the name
-    print("------------------------------------------")
-    devs = []
-
-    for p in ports:
-        dev = ADUP()
-        dev.serOpen(p, baud)
-        dev.serDebug(1)
-
-        print("testing dev ["+dev.name()+"] at baud["+str(baud)+"]")
-        if useAutoBaud:
-            print("\ttesting autobaud")
-            if dev.autobaud():
-                devs.append(dev)
-    return devs
+# def portScanner(_adup):
+#     ports = _adup.getAllPorts() # gets all mbed ports
+#     ports = _adup.getMatchPorts("COM10") # gets ports with the given string in the name
+#     print("------------------------------------------")
+#     devs = []
+# 
+#     for p in ports:
+#         dev = ADUP()
+#         dev.serOpen(p, baud)
+#         dev.serDebug(1)
+# 
+#         print("testing dev ["+dev.name()+"] at baud["+str(baud)+"]")
+#         if useAutoBaud:
+#             print("\ttesting autobaud")
+#             if dev.autobaud():
+#                 devs.append(dev)
+#     return devs

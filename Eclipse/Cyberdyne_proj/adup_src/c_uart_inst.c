@@ -95,7 +95,7 @@ void readCallback(mxc_uart_req_t* req, int error){
 	// collect the RX'd byte and request another; if RXFIFO has multiple bytes, request them all
 	c_uart_inst_uart_ovr_push(read_req.rxData, read_req.rxCnt);
 	if(false && read_req.rxCnt>0){
-		printf("(ovrBytes=%d) (writePending=%s)\n", _uart.ovrBytes, writePending?"true":"false");
+		//printf("(ovrBytes=%d) (writePending=%s)\n", _uart.ovrBytes, writePending?"true":"false");
 	}
 	if(!writePending) MXC_UART_TransactionAsync(&read_req);
 }
@@ -108,7 +108,7 @@ void drainRXfifo(void){
 }
 
 void writeCallback(mxc_uart_req_t* req, int error){
-	printf("writeCallback executing\n");
+	//printf("writeCallback executing\n");
 	writePending = false;
 }
 
@@ -277,16 +277,16 @@ void c_uart_inst_uart_write(void *const buf, unsigned int const size){
   write_req.txData=buf;
   write_req.callback = NULL;
 
-  printf("about to send [%d] bytes\n", remain);
+  //printf("about to send [%d] bytes\n", remain);
 
   while(remain>0){
 	  MXC_UART_Transaction(&write_req); // blocking TX
 	  write_req.txData+=1; // uint8_t ptr increment
 	  remain--;
-	  printf(".");
+	  //printf(".");
   }
-  printf("\n");
-  printf("TX complete\n");
+  //printf("\n");
+  //printf("TX complete\n");
 
 //  printf("waiting for writeCallback to execute\n");
 //  while(writePending); // wait till the async TX is completed
@@ -477,7 +477,7 @@ int c_uart_inst_adup_uart_init(void)
     // Initialize the UART
     if((error = MXC_UART_Init(_uart.mxc_uart, _uart._baud, MXC_UART_IBRO_CLK/*MXC_UART_APB_CLK*/)) != E_NO_ERROR) {
         printf("-->Error initializing UART: %d\n", error);
-        printf("-->Example Failed\n");
+        //printf("-->Example Failed\n");
         bResult = false;
         while (1) {}
     }
@@ -536,7 +536,7 @@ int c_uart_inst_adup_uart_init(void)
     }
     char resp[3]="OK";
     c_uart_inst_uart_write(resp, 2);
-    printf("adup sync complete\n", tmp);
+    //printf("adup sync complete\n", tmp);
 
   if(bResult)
     return(0);

@@ -97,13 +97,13 @@ void main_adup_setup(void){
 	bigmsg.buf=msgbuf;
 	bigmsg.len=0;
 
-	printf("this is the console port (press return 3 times in ADUP term to sync)\n");
+	//printf("this is the console port (press return 3 times in ADUP term to sync)\n");
 
 	adup = C_ADUP_init(230400); // passed in baud rate not yet resepcted by MAXIM drivers
 	adup->setMsg(&bigmsg);
 	adup->reg_callback(adup_app_handler);
 
-	printf("ADUP init done\n");
+	//printf("ADUP init done\n");
 	adup_init_done=true;
 }
 

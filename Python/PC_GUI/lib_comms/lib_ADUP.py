@@ -214,15 +214,22 @@ class ADUP():
     def getHeader(self):
         ack = self.serRead(1);
         rawlen = self.serRead(2);
-        acklen = int(rawlen, 16);
-        return ack, acklen;
+        try:
+            acklen = int(rawlen, 16);
+            return ack, acklen;
+        except:
+            print("************ getHeader failure **************")
+            txt = ""+ack+""+rawlen
+            self.protError(txt)
+            return None
+        
 
     def putHeader(self, cmd, length):
         self.serWrite(cmd + '{:02x}'.format(length));
         return;
 
-    def protError(self, msg):
-        print(msg)
+    def protError(self, txt):
+        print(txt)
         self.serDebug(0)
         string = "Error: ["
         time.sleep(3)

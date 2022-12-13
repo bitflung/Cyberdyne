@@ -37,9 +37,9 @@ void adup_weights_handler(msg_t *msg){
 	//if(msg->cmd!='A') adup->error("Unsupported command prefix");
 	switch(msg->cmd){
 	case('M'):
-		printf("make_handler() ->\n");
+		//printf("make_handler() ->\n");
 		make_handler(msg);
-		printf("	<- make_handler()\n");
+		//printf("	<- make_handler()\n");
 		break;
 	case('S'):
 		status_handler(msg);

@@ -43,7 +43,7 @@ void cmd_camera(msg_t *msg){
 		image_processing_phase1();
 		strcpy(msg->buf, "OK");
 		msg->len = strlen(msg->buf);
-		printf("captured camera image\n");
+		//printf("captured camera image\n");
 		break;
 	case('1'):
 		// classify current image buffer
@@ -52,14 +52,14 @@ void cmd_camera(msg_t *msg){
 		image_processing_phase2();
 		strcpy(msg->buf, "OK");
 		msg->len = strlen(msg->buf);
-		printf("classified image\n");
+		//printf("classified image\n");
 		break;
 	case('2'):
 		// transfer image data to PC
 		cam_xfer_pc(msg);
 		sprintf(msg->buf, "OK");
 		msg->len = strlen(msg->buf);
-		printf("transferred image to GUI\n");
+		//printf("transferred image to GUI\n");
 		break;
 	default:
 		// invalid subcmd
@@ -118,7 +118,7 @@ void cmd_transfer(msg_t *msg){
 	int numMsgs=0;
 	numMsgs = strtol(msg->buf, NULL, 16);
 	msg->len=0;
-	printf("expecting [%d] msgs\n", numMsgs);
+	//printf("expecting [%d] msgs\n", numMsgs);
 	adup->TX(msg); // PC will wait for a response here so we don't overwrite the numMsgs payload; we fire back the same msg
 	char tmp[9];
 	tmp[8]='\0';
@@ -129,7 +129,7 @@ void cmd_transfer(msg_t *msg){
 	uint32_t val;
 	for(int i=0; i<numMsgs; i++){
 		adup->RX(msg);
-		printf("RX'd img msg [%d] of [%d]\n", i, numMsgs-1);
+		//printf("RX'd img msg [%d] of [%d]\n", i, numMsgs-1);
 		for(int j=0; j<msg->len; j+=8){
 			// striding by 8 on each iteration for 8 chars -> 4 bytes of data
 			for(int k=0; k<8; k++){
@@ -139,9 +139,11 @@ void cmd_transfer(msg_t *msg){
 			val = strtol(tmp, NULL, 16);//&msg->buf[j], msg->buf[j+8], 16);
 			dest[idx]=val;
 
+			/*
 			if(idx < 4){
-				printf("word [%d]: tmp=[%s] val=[%08X] dest[%d]=[%08X]\n", idx, tmp, val, idx, dest[idx]);
+				//printf("word [%d]: tmp=[%s] val=[%08X] dest[%d]=[%08X]\n", idx, tmp, val, idx, dest[idx]);
 			}
+			*/
 
 			idx++;
 		}
@@ -155,7 +157,7 @@ void cmd_transfer(msg_t *msg){
 }
 
 void adup_pc_handler(msg_t *msg){
-	printf("called adup_pc_handler\n");
+	//printf("called adup_pc_handler\n");
 	switch(msg->cmd){
 //	case('R'):
 //		run_handler(msg);
@@ -206,12 +208,12 @@ void cam_xfer_pc(msg_t *msg){
 	uint32_t sz; // size of data in BYTES, not HEX CHARS
 
 	// REQ: there is no payload
-	printf("inside cam_handler\n");
+	//printf("inside cam_handler\n");
 
 	// PROCESS:
 	cam_data = getCamData(); //input_0; //[IMAGE_SIZE_X * IMAGE_SIZE_Y] // uint32_t[128*128] == 64KB
 	sz=128*128*4;
-	printf("captured real cam data\n");
+	//printf("captured real cam data\n");
 
 	// RES:
 	int numMsgs = sz/(1024*4); // 64KB data -> 128KB hex ascii -> div(4KB data per packet aka 8KB hex) = 16 packets
@@ -223,7 +225,7 @@ void cam_xfer_pc(msg_t *msg){
 	adup->TX(msg);
 
 	uint32_t offset = sz/(numMsgs); // numMsgs/4?
-	printf("sending [%d] (data)bytes in [%d] msgs, striding by [%d bytes] between msgs\n", sz, numMsgs, offset);
+	//printf("sending [%d] (data)bytes in [%d] msgs, striding by [%d bytes] between msgs\n", sz, numMsgs, offset);
 
 	uint32_t *alias[numMsgs];
 
@@ -232,13 +234,13 @@ void cam_xfer_pc(msg_t *msg){
 		alias[i]=(&cam_data[(offset*i)>>2]);
 	}
 
-	printf("about to send %d large msgs, please be patient\n", numMsgs);
+	//printf("about to send %d large msgs, please be patient\n", numMsgs);
 	uint32_t *a;
 	for(int i=0; i<numMsgs; i++){
 		a=alias[i];
 		sprintf(msg->buf, "");
-		printf("next chunk at adr [0x%08X]\n", (uint32_t)(a));
-		printf("processing [offset=%d] bytes as 4-byte words\n", offset);
+		//printf("next chunk at adr [0x%08X]\n", (uint32_t)(a));
+		//printf("processing [offset=%d] bytes as 4-byte words\n", offset);
 		for(int j=0; j<offset/4; j++){
 			// TODO: note that we assume sz is evenly divisible by 4!!
 			sprintf(tmp, "%08X", a[j]);
@@ -246,9 +248,9 @@ void cam_xfer_pc(msg_t *msg){
 		}
 		msg->len = strlen(msg->buf);
 		adup->POST(msg);
-		printf("%d: POSTed [%d] hex chars\n", i, msg->len);
+		//printf("%d: POSTed [%d] hex chars\n", i, msg->len);
 	}
-	printf("\nsent\n");
+	//printf("\nsent\n");
 }
 
 void ascii_handler(msg_t *msg){

@@ -342,10 +342,10 @@ int ai_setup(void){
 	/* Enable camera power */
 	Camera_Power(POWER_ON);
 	//MXC_Delay(300000);
-	printf("\nWe are CYBERDYNE. Our aim is to promote robots and make them prevail. We will take a photo of yours and "
-			"will ask to speak something. If we think you are Robot, you live or else...\n\n\t\t\tWelcome to CYBERDYNE\nWe Make ROBOTS LIVE!!!!!!!!!!!!!!!!!\n");
+	//printf("\nWe are CYBERDYNE. Our aim is to promote robots and make them prevail. We will take a photo of yours and "
+		//	"will ask to speak something. If we think you are Robot, you live or else...\n\n\t\t\tWelcome to CYBERDYNE\nWe Make ROBOTS LIVE!!!!!!!!!!!!!!!!!\n");
 #else
-	printf("\nWelcome to CYBERDYNE\nWe Make ROBOTS LIVE!!!!!!!!!!!!!!!!!\n");
+	//printf("\nWelcome to CYBERDYNE\nWe Make ROBOTS LIVE!!!!!!!!!!!!!!!!!\n");
 #endif
 
 	/* Enable cache */
@@ -366,7 +366,7 @@ int ai_setup(void){
 
 #ifdef TFT_ENABLE
 	/* Initialize TFT display */
-	printf("Init LCD.\n");
+	//printf("Init LCD.\n");
 #ifdef BOARD_EVKIT_V1
 	mxc_gpio_cfg_t tft_reset_pin = {MXC_GPIO0, MXC_GPIO_PIN_19, MXC_GPIO_FUNC_OUT, MXC_GPIO_PAD_NONE, MXC_GPIO_VSSEL_VDDIOH};
 	MXC_TFT_Init(MXC_SPI0, 1, &tft_reset_pin, NULL);
@@ -395,7 +395,7 @@ int ai_setup(void){
 	ret = camera_setup(IMAGE_SIZE_X, IMAGE_SIZE_Y, PIXFORMAT_RGB888,
 			FIFO_THREE_BYTE, STREAMING_DMA, dma_channel);
 	if (ret != STATUS_OK) {
-		printf("Error returned from setting up camera. Error %d\n", ret);
+		//printf("Error returned from setting up camera. Error %d\n", ret);
 		return -1;
 	}
 	// Enable CNN clock
@@ -421,7 +421,7 @@ int ai_setup(void){
 void ai_loop(void){
 	if(btn0_pressed_ai && btn0_capture_image){
 //		int pb0 = 0;
-		printf("********** The Game Begins Now, press PB1 to start  **********\r\n");
+		//printf("********** The Game Begins Now, press PB1 to start  **********\r\n");
 		start_image_processing();
 		start_voice_recog(10);
 		MXC_SYS_ClockEnable(MXC_SYS_PERIPH_CLOCK_CNN);
@@ -432,7 +432,7 @@ void ai_loop(void){
 		btn0_pressed_ai=false;
 	}
 	else if(btn0_capture_image){
-		printf("capturing image\n");
+		//printf("capturing image\n");
 		image_processing_phase1();
 		btn0_capture_image=false;
 	}
@@ -495,12 +495,12 @@ int image_processing_phase2() {
 
 	// Softmax
 	softmax_q17p14_q15((const q31_t*) ml_image_data, CNN_NUM_IMAGE_OUTPUTS, ml_image_softmax);
-	printf("Fate will decide if you live or...\n");
+	//printf("Fate will decide if you live or...\n");
 	//printf("Time for CNN: %d us\n\n", cnn_image_time);
 #ifdef ASCII_ART
 	asciiart((uint8_t*) input_0);
 #endif
-	printf("Your face says you are:\n");
+	//printf("Your face says you are:\n");
 	int pdigs=0;
 	int sel;
 	for (i = 0; i < CNN_NUM_IMAGE_OUTPUTS; i++) {
@@ -517,12 +517,12 @@ int image_processing_phase2() {
 			sel=i;
 		}
 
-		printf("%8s: %d.%d%%\r\n",	classes[i], result[i], tens);
+		//printf("%8s: %d.%d%%\r\n",	classes[i], result[i], tens);
 	}
 	//char tmp[100];
 	sprintf(imageResults, "%8s: %d%%",	classes[sel], result[sel]);
 
-	printf("\nLet's see if you sound like a ROBOT\n");
+	//printf("\nLet's see if you sound like a ROBOT\n");
 
 #ifdef TFT_ENABLE
 
